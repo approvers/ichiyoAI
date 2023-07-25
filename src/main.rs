@@ -1,13 +1,12 @@
-use std::env;
-use serenity::prelude::{Client, GatewayIntents};
 use events::event::Handler;
+use serenity::prelude::{Client, GatewayIntents};
+use std::env;
 
 mod events;
 
 #[tokio::main]
 async fn main() {
-    let token = env::var("DISCORD_API_TOKEN")
-        .expect("Expected a token in the environment");
+    let token = env::var("DISCORD_API_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::MESSAGE_CONTENT;
 
     let mut client = Client::builder(token, intents)
