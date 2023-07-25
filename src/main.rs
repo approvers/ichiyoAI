@@ -1,5 +1,8 @@
 use std::env;
 use serenity::prelude::{Client, GatewayIntents};
+use events::event::Handler;
+
+mod events;
 
 #[tokio::main]
 async fn main() {
@@ -8,6 +11,7 @@ async fn main() {
     let intents = GatewayIntents::MESSAGE_CONTENT;
 
     let mut client = Client::builder(token, intents)
+        .event_handler(Handler)
         .await
         .expect("クライアントの作成に失敗しました。");
 
