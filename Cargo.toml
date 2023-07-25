@@ -1,15 +1,14 @@
 [package]
-name = "ichiyoAI"
+name = "ichiyo_ai"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = "1.29.1"
+tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }
 
 [dependencies.serenity]
-version = "0.11.6"
-optional = true
+version = "0.11"
+features = ["client", "gateway", "model", "cache", "rustls_backend"]
 default-features = false
-features = ["rustls_backend", "client", "gateway", "model", "cache"]
