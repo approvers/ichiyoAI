@@ -6,7 +6,6 @@ USER ichiyo
 WORKDIR /home/ichiyo/app
 COPY --chown=ichiyo:ichiyo . .
 
-# note. https://github.com/rust-lang/cargo/issues/10781#issuecomment-1163819998
 RUN cargo build --release
 
 FROM debian:bullseye-slim as Runner
@@ -17,4 +16,5 @@ RUN useradd --create-home --user-group ichiyo
 USER ichiyo
 WORKDIR /home/ichiyo
 
+LABEL org.opencontainers.image.source=https://github.com/approvers/ichiyoAI
 ENTRYPOINT [ "ichiyo_ai" ]
