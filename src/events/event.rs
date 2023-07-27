@@ -14,11 +14,7 @@ impl EventHandler for Handler {
             return;
         }
 
-        if msg
-            .mentions
-            .iter()
-            .any(|user| user.id == ctx.cache.current_user_id())
-        {
+        if let Ok(true) = msg.mentions_me(&ctx).await {
             chat_ai(&ctx, msg).await;
         }
     }
