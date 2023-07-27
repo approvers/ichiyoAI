@@ -14,7 +14,7 @@ pub async fn chat_ai(ctx: &Context, msg: Message) {
     match response_content.chars().count() {
         count if count > 2000 => {
             create_temp_file(response_content.to_string());
-            edit_response_with_file(&ctx, waiting_message, "temp.txt").await;
+            edit_response_with_file(&ctx, waiting_message, "temp/temp.txt").await;
         }
         _ => edit_response(&ctx, waiting_message, response_content).await,
     }
