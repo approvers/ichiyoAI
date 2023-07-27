@@ -6,6 +6,7 @@ use events::event::Handler;
 
 mod api;
 mod events;
+mod utils;
 
 #[tokio::main]
 async fn main() {
