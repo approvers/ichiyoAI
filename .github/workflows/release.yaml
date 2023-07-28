@@ -1,9 +1,13 @@
 name: Release ichiyoAI
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: 'vX.Y.Z'
+        description: 'A release version tag'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -26,13 +30,13 @@ jobs:
 
       - name: Bulid Docker Image
         run: |
-          docker build --tag ghcr.io/approvers/ichiyo_ai:latest --tag ghcr.io/approvers/ichiyo_ai:${{ github.ref_name }} \
+          docker build --tag ghcr.io/approvers/ichiyo_ai:latest --tag ghcr.io/approvers/ichiyo_ai:${{ inputs.tag }} \
           .
 
       - name: Push Docker Image
         run: |
           docker push ghcr.io/approvers/ichiyo_ai:latest
-          docker push ghcr.io/approvers/ichiyo_ai:${{ github.ref_name }}
+          docker push ghcr.io/approvers/ichiyo_ai:${{ inputs.tag }}
 
   create_release:
     name: Create release
@@ -42,13 +46,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+
+      - name: Push tag
+        run: |
+          git tag -a ${{ inputs.tag }} -m "Release ${{ inputs.tag }}"
+          git push origin ${{ inputs.tag }}
+
       - name: Create release to GitHub Repository
         uses: softprops/action-gh-release@v0.1.15
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ inputs.tag }}
+          release_name: ichiyoAI ${{ inputs.tag }}
           body: |
             ```shell
-            docker pull ghcr.io/approvers/ichiyo_ai:${{ github.ref_name }}
+            docker pull ghcr.io/approvers/ichiyo_ai:${{ inputs.tag }}
             ```
           draft: true
