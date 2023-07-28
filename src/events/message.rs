@@ -7,12 +7,20 @@ use crate::api::chatgpt::chat_completion;
 use crate::api::discord::{edit_response, edit_response_with_file, reply};
 use crate::utils::create_temp_file;
 
-pub async fn chat_ai(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
-    let waiting_message = reply(ctx, msg, "思考中... 🤔").await;
+pub async fn chat_ai(ctx: &Context, msg: &Message, is_gpt4: bool) -> anyhow::Result<()> {
+    // let waiting_message = reply(ctx, msg, "思考中... 🤔").await;
+    let waiting_message = reply(ctx, msg, "思考中... 🤔 \n **警告:** このリクエストはGPT-3.5に対して行われます。GPT-4の解放は7月末〜8月末を予定しています。").await;
 
-    let response = chat_completion(&msg.content, Some(ChatGPTEngine::Gpt4))
-        .await
-        .context("ChatGPT APIとのやり取りに失敗しました。")?;
+    let response = if is_gpt4 {
+        chat_completion(&msg.content, Some(ChatGPTEngine::Gpt4))
+            .await
+            .context("ChatGPT APIとのやり取りに失敗しました。")?
+    } else {
+        chat_completion(&msg.content, Some(ChatGPTEngine::Gpt35Turbo))
+            .await
+            .context("ChatGPT APIとのやり取りに失敗しました。")?
+    };
+
     let response_content = &response.message().content;
 
     match response_content.chars().count() {
