@@ -46,9 +46,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-
       - name: Push tag
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a ${{ inputs.tag }} -m "Release ${{ inputs.tag }}"
           git push origin ${{ inputs.tag }}
 
