@@ -2,6 +2,8 @@ use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::prelude::Ready;
 use serenity::prelude::{Context, EventHandler};
+use tracing::info;
+use tracing::log::error;
 
 use crate::events::message::chat;
 
@@ -33,12 +35,12 @@ impl EventHandler for Handler {
                     ),
                 )
                 .await;
-            eprintln!("{:?}", why)
+            error!("{:?}", why)
         }
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
-        println!(
+        info!(
             "{} (ID: {}) にログインしました。",
             ready.user.name, ready.user.id
         );

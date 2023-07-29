@@ -41,6 +41,6 @@ async fn main() {
 fn init_logger() {
     tracing_subscriber::fmt()
         .compact()
-        .with_max_level(tracing::Level::ERROR)
+        .with_max_level(tracing::Level::INFO)
         .init()
 }
