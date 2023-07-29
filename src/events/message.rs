@@ -7,7 +7,7 @@ use crate::api::chatgpt::chat_completion;
 use crate::api::discord::{edit_response, reply};
 
 pub async fn chat_ai(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
-    let waiting_message = reply(ctx, msg, "思考中... 🤔").await;
+    let waiting_message = reply(ctx, msg, "思考中... 🤔").await?;
 
     let response = chat_completion(&msg.content, Some(ChatGPTEngine::Gpt35Turbo))
         .await
@@ -22,9 +22,9 @@ pub async fn chat_ai(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
                 waiting_message,
                 "レスポンスが2000文字を超えたため表示できません。",
             )
-            .await
+            .await?
         }
-        _ => edit_response(ctx, waiting_message, response_content).await,
+        _ => edit_response(ctx, waiting_message, response_content).await?,
     }
 
     Ok(())

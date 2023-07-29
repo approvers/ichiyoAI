@@ -19,7 +19,7 @@ pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> any
         msg,
         &format!("思考中... 🤔\n**指示内容:**\n```{}\n```", indication),
     )
-    .await;
+    .await?;
 
     // TODO: GPT-4に対応する
     let response = chat_directed(&content, &indication, Some(ChatGPTEngine::Gpt35Turbo))
@@ -35,9 +35,9 @@ pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> any
                 waiting_message,
                 "レスポンスが2000文字を超えたため表示できません。",
             )
-            .await
+            .await?;
         }
-        _ => edit_response(ctx, waiting_message, response_content).await,
+        _ => edit_response(ctx, waiting_message, response_content).await?,
     }
 
     Ok(())
