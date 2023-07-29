@@ -3,6 +3,7 @@ use std::env;
 use serenity::framework::standard::macros::group;
 use serenity::framework::StandardFramework;
 use serenity::prelude::{Client, GatewayIntents};
+use tracing::log::error;
 
 use crate::commands::DIRECT_COMMAND;
 use crate::events::Handler;
@@ -17,6 +18,8 @@ struct Conversation;
 
 #[tokio::main]
 async fn main() {
+    init_logger();
+
     let token = env::var("DISCORD_API_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES;
 
@@ -31,6 +34,13 @@ async fn main() {
         .expect("クライアントの作成に失敗しました。");
 
     if let Err(why) = client.start().await {
-        println!("クライアントの起動に失敗しました: {:?}", why)
+        error!("クライアントの起動に失敗しました: {:?}", why)
     }
+}
+
+fn init_logger() {
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(tracing::Level::ERROR)
+        .init()
 }
