@@ -7,7 +7,7 @@ pub async fn reply(ctx: &Context, msg: &Message, content: &str) -> Message {
         .expect("メッセージの送信に失敗しました。")
 }
 
-pub async fn edit_response(ctx: &Context, mut target_message: Message, response: &String) {
+pub async fn edit_response(ctx: &Context, mut target_message: Message, response: &str) {
     target_message
         .edit(ctx, |m| m.content(response))
         .await
