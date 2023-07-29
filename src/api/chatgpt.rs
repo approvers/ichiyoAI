@@ -24,3 +24,23 @@ pub async fn chat_completion(
 
     client.send_message(message).await
 }
+
+pub async fn chat_directed(
+    message: &str,
+    indication: &str,
+    model: Option<ChatGPTEngine>,
+) -> chatgpt::Result<CompletionResponse> {
+    let model = model.unwrap_or(ChatGPTEngine::Gpt35Turbo);
+    let client = ChatGPT::new_with_config(
+        &*CHATGPT_API_TOKEN,
+        ModelConfigurationBuilder::default()
+            .engine(model)
+            .build()
+            .unwrap(),
+    )?;
+
+    client
+        .new_conversation_directed(indication)
+        .send_message(message)
+        .await
+}
