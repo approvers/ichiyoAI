@@ -20,7 +20,7 @@ impl EventHandler for Handler {
 
         if let Ok(true) = msg.mentions_me(&ctx).await {
             // TODO: GPT-4が使えるようになったら解放する
-            if let Err(why) = chat_ai(&ctx, &msg, false).await {
+            if let Err(why) = chat_ai(&ctx, &msg).await {
                 let _ = msg
                     .channel_id
                     .send_message(&ctx, |m| {

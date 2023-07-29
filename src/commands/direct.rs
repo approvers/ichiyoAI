@@ -1,6 +1,5 @@
 use crate::api::chatgpt::chat_directed;
-use crate::api::discord::{edit_response, edit_response_with_file, reply};
-use crate::utils::create_temp_file;
+use crate::api::discord::{edit_response, reply};
 use anyhow::Context as _;
 use chatgpt::config::ChatGPTEngine;
 use serenity::framework::standard::Args;
@@ -31,8 +30,12 @@ pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> any
 
     match response_content.chars().count() {
         count if count > 2000 => {
-            create_temp_file(response_content.to_string());
-            edit_response_with_file(ctx, waiting_message, "temp/temp.txt").await;
+            edit_response(
+                ctx,
+                waiting_message,
+                "レスポンスが2000文字を超えたため表示できません。",
+            )
+            .await
         }
         _ => edit_response(ctx, waiting_message, response_content).await,
     }
