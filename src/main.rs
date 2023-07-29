@@ -10,7 +10,6 @@ use crate::events::Handler;
 mod api;
 mod commands;
 mod events;
-mod utils;
 
 #[group]
 #[commands(direct)]
