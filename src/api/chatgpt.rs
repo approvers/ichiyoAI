@@ -9,6 +9,10 @@ static CHATGPT_API_TOKEN: Lazy<String> = Lazy::new(|| {
     env::var("CHATGPT_API_TOKEN").expect("Expected a token in the environment (CHATGPT_API_TOKEN)")
 });
 
+/// ChatGPTと会話を行う関数。
+///
+/// * `message` - ChatGPTにリクエストするメッセージ
+/// * `model` - 使用するChatGPTのモデル([ChatGPTEngine])
 pub async fn chat_completion(
     message: &str,
     model: Option<ChatGPTEngine>,
@@ -25,6 +29,12 @@ pub async fn chat_completion(
     client.send_message(message).await
 }
 
+/// ChatGPTに対して指示をしつつ会話を行う関数。
+/// [chat_completion] と同様、モデルの指定も可能。
+///
+/// * `message` - ChatGPTにリクエストするメッセージ
+/// * `indication` - ChatGPTにリクエストする指示
+/// * `model` - 使用するChatGPTのモデル([ChatGPTEngine])
 pub async fn chat_directed(
     message: &str,
     indication: &str,
