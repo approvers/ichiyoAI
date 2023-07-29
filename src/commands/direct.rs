@@ -17,7 +17,7 @@ pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> any
     let waiting_message = reply(
         ctx,
         msg,
-        &format!("思考中... 🤔\n**指示内容:**\n```{}\n```", indication),
+        &format!("思考中... 🤔\n\n指示内容:\n```{}\n```", indication),
     )
     .await?;
 
