@@ -6,12 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.72"
+anyhow = { version = "1.0" }
 chatgpt_rs = { version = "1.1" }
-once_cell = "1.18"
-tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }
+once_cell = { version = "1.18" }
 
 [dependencies.serenity]
 version = "0.11"
 features = ["client", "gateway", "model", "cache", "rustls_backend", "framework", "standard_framework"]
 default-features = false
+
+[dependencies.tokio]
+version = "1.29"
+features = ["macros", "rt-multi-thread"]
