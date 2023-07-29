@@ -6,7 +6,7 @@ use serenity::prelude::Context;
 use crate::api::chatgpt::chat_completion;
 use crate::api::discord::{edit_response, reply};
 
-pub async fn chat_ai(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
+pub async fn chat(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     let waiting_message = reply(ctx, msg, "思考中... 🤔").await?;
 
     let response = chat_completion(&msg.content, Some(ChatGPTEngine::Gpt35Turbo))

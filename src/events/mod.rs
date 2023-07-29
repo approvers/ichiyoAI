@@ -3,7 +3,7 @@ use serenity::model::channel::Message;
 use serenity::model::prelude::Ready;
 use serenity::prelude::{Context, EventHandler};
 
-use crate::events::message::chat_ai;
+use crate::events::message::chat;
 
 pub mod message;
 
@@ -18,20 +18,22 @@ impl EventHandler for Handler {
             return;
         }
 
-        if let Ok(true) = msg.mentions_me(&ctx).await {
-            // TODO: GPT-4が使えるようになったら解放する
-            if let Err(why) = chat_ai(&ctx, &msg).await {
-                let _ = msg
-                    .channel_id
-                    .send_message(&ctx, |m| {
-                        m.content(&format!(
-                            "<@{}> エラーが発生しました。ログを確認してください。",
-                            ADMINISTRATOR
-                        ))
-                    })
-                    .await;
-                eprintln!("{:?}", why)
-            }
+        if let Ok(false) = msg.mentions_me(&ctx).await {
+            return;
+        }
+
+        // TODO: GPT-4が使えるようになったら解放する
+        if let Err(why) = chat(&ctx, &msg).await {
+            let _ = msg
+                .reply_ping(
+                    &ctx,
+                    &format!(
+                        "<@{}> エラーが発生しました。ログを確認してください。\n```{}\n```",
+                        ADMINISTRATOR, why
+                    ),
+                )
+                .await;
+            eprintln!("{:?}", why)
         }
     }
 

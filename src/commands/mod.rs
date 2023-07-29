@@ -11,8 +11,8 @@ pub mod direct;
 async fn direct(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if let Err(why) = command_direct(ctx, msg, args).await {
         let _ = msg
-            .reply_ping(ctx, "エラーが発生しました。もう一度お試しください。")
-            .await?;
+            .reply_ping(&ctx, &format!("エラーが発生しました。\n```{}\n```", why))
+            .await;
         eprintln!("{:?}", why);
     }
 
