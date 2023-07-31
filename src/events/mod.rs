@@ -1,6 +1,6 @@
 use serenity::async_trait;
 use serenity::model::channel::Message;
-use serenity::model::prelude::Ready;
+use serenity::model::prelude::{MessageType, Ready};
 use serenity::prelude::{Context, EventHandler};
 use tracing::info;
 use tracing::log::error;
@@ -20,22 +20,29 @@ impl EventHandler for Handler {
             return;
         }
 
-        if let Ok(false) = msg.mentions_me(&ctx).await {
-            return;
-        }
+        match msg.kind {
+            // 通常メッセージ
+            MessageType::Regular => {
+                if let Ok(false) = msg.mentions_me(&ctx).await {
+                    return;
+                }
 
-        // TODO: GPT-4が使えるようになったら解放する
-        if let Err(why) = chat(&ctx, &msg).await {
-            let _ = msg
-                .reply_ping(
-                    &ctx,
-                    &format!(
-                        "<@{}> エラーが発生しました。ログを確認してください。\n```{}\n```",
-                        ADMINISTRATOR, why
-                    ),
-                )
-                .await;
-            error!("{:?}", why)
+                if let Err(why) = chat(&ctx, &msg).await {
+                    let _ = msg
+                        .reply_ping(
+                            &ctx,
+                            &format!(
+                                "<@{}> エラーが発生しました。ログを確認してください。\n```{}\n```",
+                                ADMINISTRATOR, why
+                            ),
+                        )
+                        .await;
+                    error!("{:?}", why)
+                }
+            }
+            _ => {
+                return;
+            }
         }
     }
 
