@@ -7,6 +7,7 @@ use serenity::prelude::{Client, GatewayIntents};
 use tracing::log::error;
 
 use crate::commands::DIRECT_COMMAND;
+use crate::commands::HIBIKI_COMMAND;
 use crate::events::Handler;
 
 mod api;
@@ -14,7 +15,7 @@ mod commands;
 mod events;
 
 #[group]
-#[commands(direct)]
+#[commands(direct, hibiki)]
 struct Conversation;
 
 #[tokio::main]
