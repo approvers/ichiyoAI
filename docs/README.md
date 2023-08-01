@@ -34,10 +34,20 @@
 - 第2引数にはメッセージを指定します。
   - 第2引数以降では改行等が使用できます。
 
+### 響モード
+
+```
+!hibiki <メッセージ>
+```
+
+- `!hibiki` では響モードで ChatGPT と会話できます。
+- 第1引数にはメッセージを指定します。改行等が使用できます。
+- この響モードは艦これに登場する響のプロフィール、会話サンプルを学習させた ChatGPT と会話することになります。
+  - 設定ファイル: [`resource/hibiki-settings.txt`](../resource/hibiki-settings.txt)
+  - この設定ファイルは誰でも変更でき、響モードの ChatGPT を学習させることができます。
+
 ## モデル
 
 - 使用モデルは [`gpt-3.5`](https://platform.openai.com/docs/models/gpt-3-5) または [`gpt-4`](https://platform.openai.com/docs/models/gpt-4) です。
   - トレーニングデータは2021年9月です。
   - 詳細は [Models - OpenAI API](https://platform.openai.com/docs/models/overview) を確認してください。
-
-## 
