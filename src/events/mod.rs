@@ -2,8 +2,7 @@ use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::prelude::Ready;
 use serenity::prelude::{Context, EventHandler};
-use tracing::info;
-use tracing::log::error;
+use tracing::log::{error, info};
 
 use crate::events::message::chat;
 
