@@ -1,3 +1,4 @@
+use dotenvy::dotenv;
 use std::env;
 
 use serenity::framework::standard::macros::group;
@@ -18,6 +19,7 @@ struct Conversation;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     init_logger();
 
     let token = env::var("DISCORD_API_TOKEN").expect("Expected a token in the environment");
