@@ -9,10 +9,10 @@ use serenity::prelude::Context;
 pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> anyhow::Result<()> {
     let indication = args
         .single::<String>()
-        .context("引数(1つ目)のパースに失敗しました。")?;
+        .context("引数(1つ目)のパースに失敗しました。指示内容を指定してください。")?;
     let content = args
         .single::<String>()
-        .context("引数(2つ目)のパースに失敗しました。")?;
+        .context("引数(2つ目)のパースに失敗しました。メッセージを指定してください。")?;
 
     let waiting_message = reply(
         ctx,

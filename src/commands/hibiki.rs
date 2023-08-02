@@ -13,7 +13,7 @@ const APPROVERS_HIBIKI_EMOJI: &str = "<:haracho:684424533997912096>";
 pub async fn command_hibiki(ctx: &Context, msg: &Message, mut args: Args) -> anyhow::Result<()> {
     let content = args
         .single::<String>()
-        .context("引数(1つ目)のパースに失敗しました")?;
+        .context("引数(1つ目)のパースに失敗しました。響に送るメッセージを指定してください。")?;
 
     let waiting_message = reply(ctx, msg, &format!("思考中... {}", APPROVERS_HIBIKI_EMOJI)).await?;
     let settings = read_hibiki_settings_file()?;
