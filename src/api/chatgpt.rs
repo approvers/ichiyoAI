@@ -5,8 +5,8 @@ use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
 use chatgpt::types::CompletionResponse;
 use once_cell::sync::Lazy;
 
-static CHATGPT_API_TOKEN: Lazy<String> = Lazy::new(|| {
-    env::var("CHATGPT_API_TOKEN").expect("Expected a token in the environment (CHATGPT_API_TOKEN)")
+static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| {
+    env::var("OPENAI_API_KEY").expect("Expected a token in the environment (OPENAI_API_KEY)")
 });
 
 /// ChatGPTと会話を行う関数。
@@ -19,7 +19,7 @@ pub async fn chat_completion(
 ) -> chatgpt::Result<CompletionResponse> {
     let model = model.unwrap_or(ChatGPTEngine::Gpt35Turbo);
     let client = ChatGPT::new_with_config(
-        &*CHATGPT_API_TOKEN,
+        &*OPENAI_API_KEY,
         ModelConfigurationBuilder::default()
             .engine(model)
             .build()
@@ -42,7 +42,7 @@ pub async fn chat_directed(
 ) -> chatgpt::Result<CompletionResponse> {
     let model = model.unwrap_or(ChatGPTEngine::Gpt35Turbo);
     let client = ChatGPT::new_with_config(
-        &*CHATGPT_API_TOKEN,
+        &*OPENAI_API_KEY,
         ModelConfigurationBuilder::default()
             .engine(model)
             .build()
