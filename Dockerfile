@@ -1,4 +1,4 @@
-FROM rust:1.71.0-bullseye as Builder
+FROM rust:1.71.1-bullseye as Builder
 
 WORKDIR /root/app
 COPY --chown=root:root . .
