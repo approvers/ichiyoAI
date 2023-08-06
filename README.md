@@ -36,4 +36,4 @@ docker run --env-file=.env -d ichiyo_ai
 | Key                 | Description       | Default |
 |---------------------|-------------------|---------|
 | `DISCORD_API_TOKEN` | Discord API のトークン | -       |
-| `CHATGPT_API_TOKEN` | ChatGPT API のトークン | -       |
+| `OPENAI_API_KEY` | OpenAI API のトークン  | -       |
