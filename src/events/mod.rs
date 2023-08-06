@@ -1,6 +1,6 @@
 use serenity::async_trait;
 use serenity::model::channel::Message;
-use serenity::model::prelude::Ready;
+use serenity::model::prelude::{Ready, UserId};
 use serenity::prelude::{Context, EventHandler};
 use tracing::log::{error, info};
 
@@ -23,8 +23,10 @@ impl EventHandler for Handler {
             return;
         }
 
+        let request_content = remove_mention(&msg.content, ctx.cache.current_user_id());
+
         // TODO: GPT-4が使えるようになったら解放する
-        if let Err(why) = chat(&ctx, &msg).await {
+        if let Err(why) = chat(&ctx, &msg, request_content.as_str()).await {
             let _ = msg
                 .reply_ping(
                     &ctx,
@@ -44,4 +46,8 @@ impl EventHandler for Handler {
             ready.user.name, ready.user.id
         );
     }
+}
+
+fn remove_mention<'a>(target: &str, current_user_id: UserId) -> String {
+    target.replace(&format!("<@{current_user_id}>"), "")
 }

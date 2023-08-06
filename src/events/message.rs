@@ -6,10 +6,10 @@ use serenity::prelude::Context;
 use crate::api::chatgpt::chat_completion;
 use crate::api::discord::{edit_response, reply};
 
-pub async fn chat(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
+pub async fn chat(ctx: &Context, msg: &Message, request_content: &str) -> anyhow::Result<()> {
     let waiting_message = reply(ctx, msg, "思考中... 🤔").await?;
 
-    let response = chat_completion(&msg.content, Some(ChatGPTEngine::Gpt35Turbo))
+    let response = chat_completion(request_content, Some(ChatGPTEngine::Gpt35Turbo))
         .await
         .context("ChatGPT APIとのやり取りに失敗しました。")?;
 
