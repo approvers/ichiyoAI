@@ -11,7 +11,7 @@ pub async fn chat(ctx: &Context, msg: &Message, request_content: &str) -> anyhow
 
     let response = chat_completion(request_content, Some(ChatGPTEngine::Gpt35Turbo))
         .await
-        .context("ChatGPT APIとのやり取りに失敗しました。")?;
+        .context("OpenAI APIとのやり取りに失敗しました。")?;
 
     let response_content = &response.message().content;
 

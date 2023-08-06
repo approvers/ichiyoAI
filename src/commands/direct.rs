@@ -24,7 +24,7 @@ pub async fn command_direct(ctx: &Context, msg: &Message, mut args: Args) -> any
     // TODO: GPT-4に対応する
     let response = chat_directed(&content, &indication, Some(ChatGPTEngine::Gpt35Turbo))
         .await
-        .context("ChatGPT APIとのやり取りに失敗しました。")?;
+        .context("OpenAI APIとのやり取りに失敗しました。")?;
 
     let response_content = response.message().content.as_str();
 
