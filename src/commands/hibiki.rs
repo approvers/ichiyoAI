@@ -20,7 +20,7 @@ pub async fn command_hibiki(ctx: &Context, msg: &Message, mut args: Args) -> any
 
     let response = chat_directed(&content, &settings, Some(ChatGPTEngine::Gpt35Turbo))
         .await
-        .context("ChatGPT APIとのやり取りに失敗しました。")?;
+        .context("OpenAI APIとのやり取りに失敗しました。")?;
 
     let response_content = response.message().content.as_str();
 
