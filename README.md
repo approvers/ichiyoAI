@@ -5,22 +5,20 @@
 [![rustfmt](https://github.com/approvers/ichiyoAI/actions/workflows/fmt.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/fmt.yaml)
 [![Release ichiyoAI](https://github.com/approvers/ichiyoAI/actions/workflows/release.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/release.yaml)
 
-ichiyoAI は Discord 上で ChatGPI と会話ができる Discord Bot です。
+ichiyoAI は限界開発鯖で使用できるチャットAIです。
 
-2023/03/11に公開した DiscordGPT を Rust で再実装したものになります。
+## Usage
 
-- [使い方](./docs/README.md)
-
-----
-
-- [x] 2000文字以上のレスポンスに対応する
-- [ ] 会話のコンテキスト維持機能に対応する
+使い方等は [ichiyoAI Document](./docs/README.md) を参照してください。
 
 ## Installation
 
 ```shell
 # 最新版
 docker pull ghcr.io/approvers/ichiyo_ai:latest
+
+# メジャーバージョン指定
+docker pull ghcr.io/approvers/ichiyo_ai:v1
 
 # バージョン指定
 docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
