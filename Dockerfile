@@ -7,11 +7,9 @@ RUN cargo build --release --bin ichiyo_ai
 
 FROM debian:bullseye-slim as Runner
 
-RUN useradd --create-home --user-group ichiyo
-
 COPY --from=Builder --chown=root:root /root/app/target/release/ichiyo_ai /usr/local/bin/ichiyo_ai
-COPY --from=Builder --chown=root:root /root/app/resource /home/ichiyo/resource
 
+RUN useradd --create-home --user-group ichiyo
 USER ichiyo
 WORKDIR /home/ichiyo
 
