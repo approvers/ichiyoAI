@@ -1,4 +1,5 @@
 use crate::env::get_env;
+use crate::service::reply::ReplyMessages;
 use anyhow::{ensure, Context};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
@@ -58,4 +59,27 @@ pub async fn request_message(content: String) -> anyhow::Result<CompletionRespon
         "Message response exceeded 2000 characters."
     );
     Ok(response)
+}
+
+/// ChatGPT に対して一連の会話コンテキストを送信し、レスポンスをリクエストします。
+///
+/// ### 引数
+/// * `messages` -- ChatGPT　に送信する会話コンテキスト。[ReplyMessages] を実装しておく必要がある。
+///
+/// ### 返り値
+/// [String]: ChatGPT からのレスポンス
+pub async fn request_reply_message(messages: ReplyMessages) -> anyhow::Result<String> {
+    let client = init_client(OPENAI_API_KEY.as_str(), None)?;
+    let mut conversion = client.new_conversation();
+
+    conversion.send_message(messages.before_message).await?;
+    conversion.send_message(messages.after_message).await?;
+
+    let conversion_history = conversion.history;
+    let response_message = match conversion_history.last() {
+        Some(message) => message.clone().content,
+        None => return Err(anyhow::anyhow!("Could not retrieve the message correctly.")),
+    };
+
+    Ok(response_message)
 }
