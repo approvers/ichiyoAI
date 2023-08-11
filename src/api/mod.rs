@@ -1,3 +1,1 @@
-pub mod chatgpt;
-
-pub mod discord;
+pub mod openai;
