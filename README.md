@@ -22,9 +22,6 @@ docker pull ghcr.io/approvers/ichiyo_ai:v1
 
 # バージョン指定
 docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
-
-# ----
-docker run --env-file=.env -d ichiyo_ai
 ```
 
 ## Environment Variables
