@@ -21,6 +21,10 @@ impl EventHandler for EvHandler {
             return;
         }
 
+        if let Ok(false) = new_msg.mentions_me(&ctx).await {
+            return;
+        }
+
         info!(
             "{sender}: Started a conversation.",
             sender = new_msg.author.name
