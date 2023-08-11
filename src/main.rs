@@ -1,49 +1,19 @@
-use dotenvy::dotenv;
-use std::env;
+use crate::env::load_env;
+use client::discord::start_discord_client;
+use env::get_env;
 
-use serenity::framework::standard::macros::group;
-use serenity::framework::StandardFramework;
-use serenity::prelude::{Client, GatewayIntents};
-use tracing::log::error;
-
-use crate::commands::DIRECT_COMMAND;
-use crate::commands::HIBIKI_COMMAND;
-use crate::events::Handler;
-
-mod api;
-mod commands;
-mod events;
-
-#[group]
-#[commands(direct, hibiki)]
-struct Conversation;
+mod client;
+mod env;
+mod event;
 
 #[tokio::main]
-async fn main() {
-    dotenv().ok();
-    init_logger();
+async fn main() -> anyhow::Result<()> {
+    load_env();
+    tracing_subscriber::fmt().compact().init();
 
-    let token = env::var("DISCORD_API_TOKEN").expect("Expected a token in the environment");
-    let intents = GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES;
+    let token = get_env("DISCORD_API_TOKEN");
 
-    let framework = StandardFramework::new()
-        .configure(|f| f.prefix("!"))
-        .group(&CONVERSATION_GROUP);
+    start_discord_client(token.as_str()).await?;
 
-    let mut client = Client::builder(token, intents)
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .expect("クライアントの作成に失敗しました。");
-
-    if let Err(why) = client.start().await {
-        error!("クライアントの起動に失敗しました: {:?}", why)
-    }
-}
-
-fn init_logger() {
-    tracing_subscriber::fmt()
-        .compact()
-        .with_max_level(tracing::Level::INFO)
-        .init()
+    Ok(())
 }
