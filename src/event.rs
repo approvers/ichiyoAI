@@ -1,5 +1,6 @@
 use crate::client::discord::EvHandler;
 use crate::service::chat::chat_mode;
+use crate::service::reply::reply_mode;
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
@@ -25,13 +26,14 @@ impl EventHandler for EvHandler {
             sender = new_msg.author.name
         );
 
+        let http = ctx.clone().http;
         let channel_id = new_msg.channel_id;
         let self_user_id = ctx.clone().cache.current_user_id();
 
         match new_msg.kind {
             // 通常メッセージ (チャットモード)
             MessageType::Regular => {
-                let typing = start_typing(ctx.clone().http, channel_id);
+                let typing = start_typing(http, channel_id);
                 let content = remove_mention(&new_msg.content, self_user_id);
 
                 if let Err(why) = chat_mode(&ctx, new_msg.clone(), content).await {
@@ -40,6 +42,25 @@ impl EventHandler for EvHandler {
                             &ctx,
                             &format!(
                                 "Unexpected error reported! (Chat Mode), Read log <@{mention}> \n```{error}\n```",
+                                mention = ADMINISTRATOR, error = why
+                            ),
+                        )
+                        .await;
+                    error!("{:?}", why)
+                }
+
+                typing.stop();
+            }
+            // 返信 (リプライモード)
+            MessageType::InlineReply => {
+                let typing = start_typing(http, channel_id);
+
+                if let Err(why) = reply_mode(&ctx, new_msg.clone()).await {
+                    let _ = new_msg
+                        .reply(
+                            &ctx,
+                            &format!(
+                                "Unexpected error reported! (Reply Mode), Read log <@{mention}> \n```{error}\n```",
                                 mention = ADMINISTRATOR, error = why
                             ),
                         )
