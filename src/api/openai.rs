@@ -5,7 +5,10 @@ use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
 use chatgpt::types::CompletionResponse;
 use once_cell::sync::Lazy;
+use std::time::Duration;
+use tokio::time::timeout;
 
+static TIMEOUT_DURATION: Duration = Duration::from_secs(15);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
 
 /// OpenAI API のクライアントを初期化します。
@@ -49,10 +52,10 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// * 2000文字を超過する
 pub async fn request_message(content: String) -> anyhow::Result<CompletionResponse> {
     let client = init_client(OPENAI_API_KEY.as_str(), None)?;
-    let response = client
-        .send_message(content)
-        .await
-        .context("Failed to communicate with ChatGPT")?;
+    let response = match timeout(TIMEOUT_DURATION, client.send_message(content)).await {
+        Ok(result) => result.context("Failed to communicate with ChatGPT")?,
+        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
+    };
 
     ensure!(
         &response.message().content.len() <= &2000,
@@ -72,8 +75,25 @@ pub async fn request_reply_message(messages: ReplyMessages) -> anyhow::Result<St
     let client = init_client(OPENAI_API_KEY.as_str(), None)?;
     let mut conversion = client.new_conversation();
 
-    conversion.send_message(messages.before_message).await?;
-    conversion.send_message(messages.after_message).await?;
+    match timeout(
+        TIMEOUT_DURATION,
+        conversion.send_message(messages.before_message),
+    )
+    .await
+    {
+        Ok(result) => result?,
+        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
+    };
+
+    match timeout(
+        TIMEOUT_DURATION,
+        conversion.send_message(messages.after_message),
+    )
+    .await
+    {
+        Ok(result) => result?,
+        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
+    };
 
     let conversion_history = conversion.history;
     let response_message = match conversion_history.last() {
