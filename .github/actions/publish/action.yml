@@ -35,7 +35,7 @@ runs:
         push: true
         tags: |
           ghcr.io/approvers/ichiyo_ai:latest
-          ghcr.io/approvers/ichiyo_ai:${{ inputs.sha }}
-          ghcr.io/approvers/ichiyo_ai:${{ inputs.major }}
-          ghcr.io/approvers/ichiyo_ai:${{ inputs.major }}.${{ inputs.minor }}
-          ghcr.io/approvers/ichiyo_ai:${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}
+          ghcr.io/approvers/ichiyo_ai:v${{ inputs.sha }}
+          ghcr.io/approvers/ichiyo_ai:v${{ inputs.major }}
+          ghcr.io/approvers/ichiyo_ai:v${{ inputs.major }}.${{ inputs.minor }}
+          ghcr.io/approvers/ichiyo_ai:v${{ inputs.major }}.${{ inputs.minor }}.${{ inputs.patch }}
