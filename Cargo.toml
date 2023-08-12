@@ -21,5 +21,5 @@ features = ["client", "gateway", "model", "cache", "rustls_backend"]
 default-features = false
 
 [dependencies.tokio]
-version = "1.29"
+version = "1.31"
 features = ["macros", "rt-multi-thread", "time"]
