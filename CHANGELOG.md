@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.1.0...ichiyo_ai-v1.2.0) (2023-08-12)
+
+
+### Features
+
+* mitigation openai timeout ([a0cc9bc](https://github.com/approvers/ichiyoAI/commit/a0cc9bcf4a0ca766e6653d335e7ab2532120c29c))
+* support sender name ([4a7e7e1](https://github.com/approvers/ichiyoAI/commit/4a7e7e110b6eea2269b328dd06ed1c00502224c0))
+
 ## [1.1.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.0.1...ichiyo_ai-v1.1.0) (2023-08-12)
 
 
