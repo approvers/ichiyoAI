@@ -42,6 +42,7 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 ///
 /// ### 引数
 /// * `content` -- ChatGPT に送信するメッセージ
+/// * `sender_name` --　ChatGPT に送信するメッセージの送信者の名前。指定しない場合([None])は、 "あなた" となる。
 /// * `model` --
 ///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
 ///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
@@ -54,10 +55,14 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// * 2000文字を超過する
 pub async fn request_message(
     content: String,
+    sender_name: Option<String>,
     model: Option<ChatGPTEngine>,
 ) -> anyhow::Result<CompletionResponse> {
     let client = init_client(OPENAI_API_KEY.as_str(), model)?;
-    let response = match timeout(TIMEOUT_DURATION, client.send_message(content)).await {
+    let sender_name = sender_name.unwrap_or("あなた".to_string());
+    let mut conversion =
+        client.new_conversation_directed(&format!("ユーザーの名前: {}", sender_name));
+    let response = match timeout(TIMEOUT_DURATION, conversion.send_message(content)).await {
         Ok(result) => result.context("Failed to communicate with ChatGPT")?,
         Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
     };
@@ -73,6 +78,7 @@ pub async fn request_message(
 ///
 /// ### 引数
 /// * `messages` -- ChatGPT　に送信する会話コンテキスト。[ReplyMessages] を実装しておく必要がある。
+/// * `sender_name` --　ChatGPT に送信するメッセージの送信者の名前。指定しない場合([None])は、 "あなた" となる。
 /// * `model` --
 ///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
 ///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
@@ -81,10 +87,13 @@ pub async fn request_message(
 /// [String]: ChatGPT からのレスポンス
 pub async fn request_reply_message(
     messages: ReplyMessages,
+    sender_name: Option<String>,
     model: Option<ChatGPTEngine>,
 ) -> anyhow::Result<String> {
     let client = init_client(OPENAI_API_KEY.as_str(), model)?;
-    let mut conversion = client.new_conversation();
+    let sender_name = sender_name.unwrap_or("あなた".to_string());
+    let mut conversion =
+        client.new_conversation_directed(&format!("ユーザーの名前: {}", sender_name));
 
     match timeout(
         TIMEOUT_DURATION,
