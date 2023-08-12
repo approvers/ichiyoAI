@@ -1,44 +1,47 @@
 use crate::api::openai::request_reply_message;
+use crate::model::{ReplyMessage, ReplyRole};
 use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
+use tracing::info;
 
-pub struct ReplyMessages {
-    pub before_message: String,
-    pub after_message: String,
-}
+pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
+    let replies = get_replies(msg);
 
-impl ReplyMessages {
-    pub fn new(before_message: String, after_message: String) -> Self {
-        ReplyMessages {
-            before_message,
-            after_message,
-        }
-    }
-}
+    info!("{:?}", replies);
 
-pub async fn reply_mode(ctx: &Context, msg: Message) -> anyhow::Result<()> {
-    let replies = spilt_message(&msg)?;
-    let response_message =
-        request_reply_message(replies, Some(msg.clone().author.name), Some(Gpt4)).await?;
+    let response_message = request_reply_message(&replies, Some(Gpt4)).await?;
 
     msg.reply(ctx, response_message).await?;
 
     Ok(())
 }
 
-fn spilt_message(msg: &Message) -> anyhow::Result<ReplyMessages> {
-    let before_message = match &msg.referenced_message {
-        Some(message) => &message.content,
-        None => {
-            return Err(anyhow::anyhow!(
-                "The message to which you are replying could not be found."
-            ))
-        }
-    };
+fn get_replies(msg: &Message) -> Vec<ReplyMessage> {
+    let mut replies: Vec<ReplyMessage> = vec![ReplyMessage {
+        role: ReplyRole::User,
+        content: msg.content.clone(),
+    }];
 
-    Ok(ReplyMessages::new(
-        before_message.clone(),
-        msg.clone().content,
-    ))
+    // TODO: イテレータにしたい
+    let mut target_message = &msg.referenced_message;
+    while let Some(ref message) = target_message {
+        let role = if message.author.bot {
+            ReplyRole::Ichiyo
+        } else {
+            ReplyRole::User
+        };
+
+        let reply = ReplyMessage {
+            role,
+            content: message.content.clone(),
+        };
+
+        replies.push(reply);
+
+        target_message = &message.referenced_message;
+    }
+
+    replies.reverse();
+    replies
 }
