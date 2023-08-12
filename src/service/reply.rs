@@ -1,4 +1,5 @@
 use crate::api::openai::request_reply_message;
+use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
 
@@ -18,7 +19,7 @@ impl ReplyMessages {
 
 pub async fn reply_mode(ctx: &Context, msg: Message) -> anyhow::Result<()> {
     let replies = spilt_message(&msg)?;
-    let response_message = request_reply_message(replies).await?;
+    let response_message = request_reply_message(replies, Some(Gpt4)).await?;
 
     msg.reply(ctx, response_message).await?;
 
