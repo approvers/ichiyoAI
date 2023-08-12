@@ -3,13 +3,9 @@ use crate::model::{ReplyMessage, ReplyRole};
 use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
-use tracing::info;
 
 pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     let replies = get_replies(msg);
-
-    info!("{:?}", replies);
-
     let response_message = request_reply_message(&replies, Some(Gpt4)).await?;
 
     msg.reply(ctx, response_message).await?;
