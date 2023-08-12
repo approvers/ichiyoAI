@@ -6,6 +6,7 @@ mod api;
 mod client;
 mod env;
 mod event;
+mod model;
 mod service;
 
 #[tokio::main]
