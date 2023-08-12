@@ -19,7 +19,8 @@ impl ReplyMessages {
 
 pub async fn reply_mode(ctx: &Context, msg: Message) -> anyhow::Result<()> {
     let replies = spilt_message(&msg)?;
-    let response_message = request_reply_message(replies, Some(Gpt4)).await?;
+    let response_message =
+        request_reply_message(replies, Some(msg.clone().author.name), Some(Gpt4)).await?;
 
     msg.reply(ctx, response_message).await?;
 
