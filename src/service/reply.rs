@@ -5,7 +5,7 @@ use serenity::model::prelude::Message;
 use serenity::prelude::Context;
 
 pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
-    let replies = get_replies(msg);
+    let replies = get_replies(ctx, msg).await?;
     let response_message = request_reply_message(&replies, Some(Gpt4)).await?;
 
     msg.reply(ctx, response_message).await?;
@@ -13,7 +13,7 @@ pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_replies(msg: &Message) -> Vec<ReplyMessage> {
+async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMessage>> {
     let mut replies: Vec<ReplyMessage> = vec![ReplyMessage {
         role: ReplyRole::User,
         content: msg.content.clone(),
@@ -22,7 +22,7 @@ fn get_replies(msg: &Message) -> Vec<ReplyMessage> {
     // TODO: イテレータにしたい
     let mut target_message = &msg.referenced_message;
     while let Some(ref message) = target_message {
-        let role = if message.author.bot {
+        let role = if message.is_own(ctx) {
             ReplyRole::Ichiyo
         } else {
             ReplyRole::User
@@ -39,5 +39,5 @@ fn get_replies(msg: &Message) -> Vec<ReplyMessage> {
     }
 
     replies.reverse();
-    replies
+    Ok(replies)
 }
