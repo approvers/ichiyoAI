@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.0.1...ichiyo_ai-v1.1.0) (2023-08-12)
+
+
+### Features
+
+* chat_mode and reply_mode using gpt-4 ([2027f1d](https://github.com/approvers/ichiyoAI/commit/2027f1df67c86f67003764e07b1efb9e66f6ae7b))
+* ease timeout ([ee8a751](https://github.com/approvers/ichiyoAI/commit/ee8a7512f1325f051bdea58d5ed9cae9ed2c9e01))
+* support multi model ([2b9c21c](https://github.com/approvers/ichiyoAI/commit/2b9c21cee93db89e4a879fdfeb5db122bd9724a7))
+
 ## [1.0.1](https://github.com/approvers/ichiyoAI/compare/v1.0.0...v1.0.1) (2023-08-11)
 
 
