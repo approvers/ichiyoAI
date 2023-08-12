@@ -42,7 +42,9 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 ///
 /// ### 引数
 /// * `content` -- ChatGPT に送信するメッセージ
-///
+/// * `model` --
+///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
+///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
 /// ### 返り値
 /// [CompletionResponse]: ChatGPT からのレスポンス
 ///
@@ -50,8 +52,11 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// 下記条件でエラーが報告されます。
 /// * ChatGPT とのやり取りに失敗する
 /// * 2000文字を超過する
-pub async fn request_message(content: String) -> anyhow::Result<CompletionResponse> {
-    let client = init_client(OPENAI_API_KEY.as_str(), None)?;
+pub async fn request_message(
+    content: String,
+    model: Option<ChatGPTEngine>,
+) -> anyhow::Result<CompletionResponse> {
+    let client = init_client(OPENAI_API_KEY.as_str(), model)?;
     let response = match timeout(TIMEOUT_DURATION, client.send_message(content)).await {
         Ok(result) => result.context("Failed to communicate with ChatGPT")?,
         Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
@@ -68,11 +73,17 @@ pub async fn request_message(content: String) -> anyhow::Result<CompletionRespon
 ///
 /// ### 引数
 /// * `messages` -- ChatGPT　に送信する会話コンテキスト。[ReplyMessages] を実装しておく必要がある。
+/// * `model` --
+///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
+///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
 ///
 /// ### 返り値
 /// [String]: ChatGPT からのレスポンス
-pub async fn request_reply_message(messages: ReplyMessages) -> anyhow::Result<String> {
-    let client = init_client(OPENAI_API_KEY.as_str(), None)?;
+pub async fn request_reply_message(
+    messages: ReplyMessages,
+    model: Option<ChatGPTEngine>,
+) -> anyhow::Result<String> {
+    let client = init_client(OPENAI_API_KEY.as_str(), model)?;
     let mut conversion = client.new_conversation();
 
     match timeout(
