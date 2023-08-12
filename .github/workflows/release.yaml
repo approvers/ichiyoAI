@@ -18,6 +18,7 @@ jobs:
         id: release
         with:
           release-type: rust
+          command: github-release
 
       - name: Publish the Docker package
         if: steps.release.outputs.release_created
