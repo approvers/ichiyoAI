@@ -27,6 +27,7 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
     let channel_id = msg.channel_id;
     let mut target_message_id = msg.referenced_message.as_ref().map(|m| m.id);
     while let Some(message_id) = target_message_id {
+        // `.referenced_message`は直近のメッセージしかSome<T>では無いため，`.get_message`でメッセージを取得している．
         let message = ctx.http.get_message(channel_id.0, message_id.0).await?;
 
         let role = if message.is_own(ctx) {
