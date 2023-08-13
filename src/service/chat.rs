@@ -1,9 +1,10 @@
-use crate::api::openai::request_message;
 use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use chatgpt::types::CompletionResponse;
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
+
+use crate::client::openai::request_message;
 
 pub async fn chat_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     let response = get_response(ctx, msg).await?;
