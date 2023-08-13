@@ -59,7 +59,7 @@ impl EventHandler for EvHandler {
             MessageType::InlineReply => {
                 let typing = start_typing(http, channel_id);
 
-                if let Err(why) = reply_mode(&ctx, new_msg.clone()).await {
+                if let Err(why) = reply_mode(&ctx, &new_msg).await {
                     let _ = new_msg
                         .reply(
                             &ctx,

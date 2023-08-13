@@ -1,9 +1,9 @@
 use crate::env::get_env;
-use crate::service::reply::ReplyMessages;
+use crate::model::{ReplyMessage, ReplyRole};
 use anyhow::{ensure, Context};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
-use chatgpt::types::CompletionResponse;
+use chatgpt::types::{ChatMessage, CompletionResponse, Role};
 use once_cell::sync::Lazy;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -86,40 +86,27 @@ pub async fn request_message(
 /// ### 返り値
 /// [String]: ChatGPT からのレスポンス
 pub async fn request_reply_message(
-    messages: ReplyMessages,
-    sender_name: Option<String>,
+    reply_messages: &[ReplyMessage],
     model: Option<ChatGPTEngine>,
 ) -> anyhow::Result<String> {
     let client = init_client(OPENAI_API_KEY.as_str(), model)?;
-    let sender_name = sender_name.unwrap_or("あなた".to_string());
-    let mut conversion =
-        client.new_conversation_directed(&format!("ユーザーの名前: {}", sender_name));
 
-    match timeout(
-        TIMEOUT_DURATION,
-        conversion.send_message(messages.before_message),
-    )
-    .await
-    {
-        Ok(result) => result?,
-        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
-    };
+    let history = reply_messages
+        .iter()
+        .map(|reply| ChatMessage {
+            content: reply.content.clone(),
+            role: match reply.role {
+                ReplyRole::Ichiyo => Role::Assistant,
+                ReplyRole::User => Role::User,
+            },
+        })
+        .collect::<Vec<ChatMessage>>();
 
-    match timeout(
-        TIMEOUT_DURATION,
-        conversion.send_message(messages.after_message),
-    )
-    .await
-    {
-        Ok(result) => result?,
-        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
-    };
+    let response = timeout(TIMEOUT_DURATION, client.send_history(&history))
+        .await
+        .context("Operation timed out.")??;
 
-    let conversion_history = conversion.history;
-    let response_message = match conversion_history.last() {
-        Some(message) => message.clone().content,
-        None => return Err(anyhow::anyhow!("Could not retrieve the message correctly.")),
-    };
+    let response_message = response.message().content.clone();
 
     Ok(response_message)
 }
