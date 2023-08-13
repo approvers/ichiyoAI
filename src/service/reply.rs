@@ -1,10 +1,9 @@
+use crate::client::openai::request_reply_message;
+use crate::model::{ReplyMessage, ReplyRole};
 use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
-
-use crate::client::openai::request_reply_message;
-use crate::model::{ReplyMessage, ReplyRole};
 
 pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
     let replies = get_replies(ctx, msg).await?;
