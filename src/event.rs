@@ -1,6 +1,5 @@
-use crate::client::discord::EvHandler;
-use crate::service::chat::chat_mode;
-use crate::service::reply::reply_mode;
+use std::sync::Arc;
+
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
@@ -9,8 +8,11 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
 use serenity::model::prelude::MessageType;
 use serenity::prelude::EventHandler;
-use std::sync::Arc;
 use tracing::log::{error, info};
+
+use crate::client::discord::EvHandler;
+use crate::service::chat::chat_mode;
+use crate::service::reply::reply_mode;
 
 const ADMINISTRATOR: u64 = 586824421470109716;
 
