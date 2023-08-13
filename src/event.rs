@@ -1,6 +1,5 @@
-use crate::client::discord::EvHandler;
-use crate::service::chat::chat_mode;
-use crate::service::reply::reply_mode;
+use std::sync::Arc;
+
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
@@ -9,15 +8,27 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
 use serenity::model::prelude::MessageType;
 use serenity::prelude::EventHandler;
-use std::sync::Arc;
 use tracing::log::{error, info};
 
+use crate::client::discord::EvHandler;
+use crate::service::chat::chat_mode;
+use crate::service::reply::reply_mode;
+
 const ADMINISTRATOR: u64 = 586824421470109716;
+// note: 暫定措置でBAN https://github.com/approvers/ichiyoAI/pull/53
+const BANNED_USERS: &[u64] = &[
+    596121630930108426, // yuzukiefu
+    216216836214095872, // ksrg0
+];
 
 #[async_trait]
 impl EventHandler for EvHandler {
     async fn message(&self, ctx: Context, new_msg: Message) {
         if new_msg.author.bot || new_msg.is_private() {
+            return;
+        }
+
+        if BANNED_USERS.contains(&new_msg.author.id.0) {
             return;
         }
 

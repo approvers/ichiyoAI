@@ -1,5 +1,6 @@
-use dotenvy::dotenv;
 use std::env;
+
+use dotenvy::dotenv;
 
 pub fn load_env() {
     dotenv().ok();

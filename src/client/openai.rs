@@ -1,12 +1,14 @@
-use crate::env::get_env;
-use crate::model::{ReplyMessage, ReplyRole};
+use std::time::Duration;
+
 use anyhow::{ensure, Context};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
 use chatgpt::types::{ChatMessage, CompletionResponse, Role};
 use once_cell::sync::Lazy;
-use std::time::Duration;
 use tokio::time::timeout;
+
+use crate::env::get_env;
+use crate::model::{ReplyMessage, ReplyRole};
 
 static TIMEOUT_DURATION: Duration = Duration::from_secs(60);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
