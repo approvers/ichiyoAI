@@ -19,6 +19,7 @@ jobs:
         id: ichiyoai-token
         uses: tibdex/github-app-token@v1
         with:
+          app_id: ${{ secrets.HIGUCHI_ICHIYO_APP_ID }}
           private-key: ${{ secrets.HIGUCHI_ICHIYO_PRIVATE_KEY }}
 
       - name: Run release-please-action
