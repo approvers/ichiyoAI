@@ -15,6 +15,7 @@ use crate::service::chat::chat_mode;
 use crate::service::reply::reply_mode;
 
 const ADMINISTRATOR: u64 = 586824421470109716;
+// note: 暫定措置でBAN https://github.com/approvers/ichiyoAI/pull/53
 const BANNED_USERS: &[u64] = &[
     596121630930108426, // yuzukiefu
     216216836214095872, // ksrg0
