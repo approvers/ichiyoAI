@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.2.0...ichiyo_ai-v1.3.0) (2023-08-13)
+
+
+### Features
+
+* 返信のコンテキストを維持するように変更 ([#49](https://github.com/approvers/ichiyoAI/issues/49)) ([d97a047](https://github.com/approvers/ichiyoAI/commit/d97a04711bc24c3071d05fa1c4db797c48ac4762))
+
 ## [1.2.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.1.0...ichiyo_ai-v1.2.0) (2023-08-12)
 
 
