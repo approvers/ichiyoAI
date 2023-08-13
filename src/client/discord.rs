@@ -1,5 +1,5 @@
 use anyhow::Context;
-use serenity::{Client, prelude::GatewayIntents};
+use serenity::{prelude::GatewayIntents, Client};
 
 pub struct EvHandler;
 

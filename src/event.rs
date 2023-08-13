@@ -17,7 +17,7 @@ use crate::service::reply::reply_mode;
 const ADMINISTRATOR: u64 = 586824421470109716;
 const BANNED_USERS: &[u64] = &[
     596121630930108426, // yuzukiefu
-    216216836214095872 // ksrg0
+    216216836214095872, // ksrg0
 ];
 
 #[async_trait]

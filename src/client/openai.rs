@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use anyhow::{Context, ensure};
+use anyhow::{ensure, Context};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
 use chatgpt::types::{ChatMessage, CompletionResponse, Role};
@@ -35,7 +35,7 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
             .build()
             .unwrap(),
     )
-        .context("Failed to initialize OpenAI API")?;
+    .context("Failed to initialize OpenAI API")?;
 
     Ok(client)
 }
