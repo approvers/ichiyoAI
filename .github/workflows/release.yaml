@@ -14,10 +14,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: google-github-actions/release-please-action@v3
+
+      - name: Get token
+        id: ichiyoai-token
+        uses: tibdex/github-app-token@v1
+        with:
+          private-key: ${{ secrets.HIGUCHI_ICHIYO_PRIVATE_KEY }}
+
+      - name: Run release-please-action
+        uses: google-github-actions/release-please-action@v3
         id: release
         with:
           release-type: rust
+          token: ${{ steps.ichiyoai-token.outputs.token }}
           command: manifest
           package-name: ichiyoAI
 
