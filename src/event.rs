@@ -6,7 +6,7 @@ use serenity::client::Context;
 use serenity::http::{Http, Typing};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::id::{ChannelId, UserId};
+use serenity::model::id::ChannelId;
 use serenity::model::prelude::MessageType;
 use serenity::prelude::EventHandler;
 use std::sync::Arc;
@@ -25,22 +25,19 @@ impl EventHandler for EvHandler {
             return;
         }
 
+        let http = ctx.clone().http;
+        let channel_id = new_msg.channel_id;
+
         info!(
             "{sender}: Started a conversation.",
             sender = new_msg.author.name
         );
-
-        let http = ctx.clone().http;
-        let channel_id = new_msg.channel_id;
-        let self_user_id = ctx.clone().cache.current_user_id();
+        let typing = start_typing(http, channel_id);
 
         match new_msg.kind {
             // 通常メッセージ (チャットモード)
             MessageType::Regular => {
-                let typing = start_typing(http, channel_id);
-                let content = remove_mention(&new_msg.content, self_user_id);
-
-                if let Err(why) = chat_mode(&ctx, new_msg.clone(), content).await {
+                if let Err(why) = chat_mode(&ctx, &new_msg).await {
                     let _ = new_msg
                         .reply(
                             &ctx,
@@ -52,13 +49,9 @@ impl EventHandler for EvHandler {
                         .await;
                     error!("{:?}", why)
                 }
-
-                typing.stop();
             }
             // 返信 (リプライモード)
             MessageType::InlineReply => {
-                let typing = start_typing(http, channel_id);
-
                 if let Err(why) = reply_mode(&ctx, &new_msg).await {
                     let _ = new_msg
                         .reply(
@@ -71,12 +64,11 @@ impl EventHandler for EvHandler {
                         .await;
                     error!("{:?}", why)
                 }
-
-                typing.stop();
             }
             _ => (),
         }
 
+        typing.stop();
         info!(
             "{sender}: Conversation completed.",
             sender = new_msg.author.name
@@ -94,8 +86,4 @@ impl EventHandler for EvHandler {
 
 fn start_typing(http: Arc<Http>, target_channel_id: ChannelId) -> Typing {
     Typing::start(http, u64::from(target_channel_id)).expect("Failed to start typing")
-}
-
-fn remove_mention(target_msg_content: &str, current_user_id: UserId) -> String {
-    target_msg_content.replace(&format!("<@{current_user_id}>"), "")
 }

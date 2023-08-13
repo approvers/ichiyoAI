@@ -1,4 +1,4 @@
-use crate::api::openai::request_reply_message;
+use crate::client::openai::request_reply_message;
 use crate::model::{ReplyMessage, ReplyRole};
 use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use once_cell::sync::OnceCell;

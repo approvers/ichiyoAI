@@ -2,7 +2,6 @@ use crate::env::load_env;
 use client::discord::start_discord_client;
 use env::get_env;
 
-mod api;
 mod client;
 mod env;
 mod event;
