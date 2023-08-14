@@ -7,11 +7,12 @@ use serenity::http::{Http, Typing};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
-use serenity::model::prelude::MessageType;
+use serenity::model::prelude::{Activity, MessageType};
 use serenity::prelude::EventHandler;
 use std::sync::Arc;
 use tracing::log::{error, info};
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 const ADMINISTRATOR: u64 = 586824421470109716;
 
 #[async_trait]
@@ -75,11 +76,15 @@ impl EventHandler for EvHandler {
         )
     }
 
-    async fn ready(&self, _: Context, self_bot: Ready) {
+    async fn ready(&self, ctx: Context, self_bot: Ready) {
+        ctx.set_activity(Activity::playing(&format!("v{}", VERSION)))
+            .await;
+
         info!(
-            "Successfully connected to {username} (ID: {userid})",
+            "Successfully connected to {username}! (ID: {userid}) - Using ichiyoAI v{version}",
             username = self_bot.user.name,
-            userid = self_bot.user.id
+            userid = self_bot.user.id,
+            version = VERSION
         )
     }
 }
