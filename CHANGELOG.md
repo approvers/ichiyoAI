@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.4.0...ichiyo_ai-v1.5.0) (2023-08-14)
+
+
+### Features
+
+* サブスクライバー限定で GPT-4 を解放 ([#59](https://github.com/approvers/ichiyoAI/issues/59)) ([f407fd7](https://github.com/approvers/ichiyoAI/commit/f407fd7c45ad38bed82e91553537b66badc226c0))
+
+
+### Bug Fixes
+
+* 返信時メンションしない不具合を修正 ([#61](https://github.com/approvers/ichiyoAI/issues/61)) ([92db0b1](https://github.com/approvers/ichiyoAI/commit/92db0b123cab54aef19acc15c87d3eaa946bd298))
+
 ## [1.4.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.3.0...ichiyo_ai-v1.4.0) (2023-08-14)
 
 
