@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.3.0...ichiyo_ai-v1.4.0) (2023-08-14)
+
+
+### Features
+
+* アクティビティ欄にバージョンを表示するように ([#58](https://github.com/approvers/ichiyoAI/issues/58)) ([f81d055](https://github.com/approvers/ichiyoAI/commit/f81d0555a600eadfb67d63a4ed4a33b71084252e))
+
+
+### Bug Fixes
+
+* **ci:** higuchi-ichiyo の制御用 AppID を指定する ([#55](https://github.com/approvers/ichiyoAI/issues/55)) ([7a49d4d](https://github.com/approvers/ichiyoAI/commit/7a49d4d50ecef7358cf712ae11dd5efe3d8cb5c5))
+
 ## [1.3.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.2.0...ichiyo_ai-v1.3.0) (2023-08-13)
 
 
