@@ -10,7 +10,7 @@ pub async fn chat_mode(ctx: &Context, msg: &Message, model: ChatGPTEngine) -> an
     let response = get_response(ctx, msg, model).await?;
     let reply_content = &response.message().content;
 
-    msg.reply(ctx, reply_content).await?;
+    msg.reply_ping(ctx, reply_content).await?;
 
     Ok(())
 }
