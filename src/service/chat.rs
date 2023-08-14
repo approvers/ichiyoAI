@@ -1,4 +1,3 @@
-use chatgpt::prelude::ChatGPTEngine::Gpt4;
 use chatgpt::types::CompletionResponse;
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
@@ -21,7 +20,7 @@ async fn get_response(ctx: &Context, msg: &Message) -> anyhow::Result<Completion
 
     let content = msg.content.replace(mention, "").trim().to_string();
 
-    let response = request_message(content, Some(Gpt4)).await?;
+    let response = request_message(content, None).await?;
 
     Ok(response)
 }
