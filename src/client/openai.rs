@@ -54,9 +54,9 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// * 2000文字を超過する
 pub async fn request_message(
     content: String,
-    model: Option<ChatGPTEngine>,
+    model: ChatGPTEngine,
 ) -> anyhow::Result<CompletionResponse> {
-    let client = init_client(OPENAI_API_KEY.as_str(), model)?;
+    let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let response = match timeout(TIMEOUT_DURATION, client.send_message(content)).await {
         Ok(result) => result.context("Failed to communicate with ChatGPT")?,
@@ -82,9 +82,9 @@ pub async fn request_message(
 /// [String]: ChatGPT からのレスポンス
 pub async fn request_reply_message(
     reply_messages: &[ReplyMessage],
-    model: Option<ChatGPTEngine>,
+    model: ChatGPTEngine,
 ) -> anyhow::Result<String> {
-    let client = init_client(OPENAI_API_KEY.as_str(), model)?;
+    let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let history = reply_messages
         .iter()

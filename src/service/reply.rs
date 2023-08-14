@@ -1,13 +1,14 @@
 use crate::client::openai::request_reply_message;
 use crate::model::{ReplyMessage, ReplyRole};
+use chatgpt::prelude::ChatGPTEngine;
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
 
-pub async fn reply_mode(ctx: &Context, msg: &Message) -> anyhow::Result<()> {
+pub async fn reply_mode(ctx: &Context, msg: &Message, model: ChatGPTEngine) -> anyhow::Result<()> {
     let replies = get_replies(ctx, msg).await?;
     // notes: GPT-4 があまりにも高いため、GPT-3.5 に revert
-    let response_message = request_reply_message(&replies, None).await?;
+    let response_message = request_reply_message(&replies, model).await?;
 
     msg.reply(ctx, response_message).await?;
 
