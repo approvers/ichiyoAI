@@ -1,19 +1,23 @@
 use crate::client::discord::EvHandler;
 use crate::service::chat::chat_mode;
 use crate::service::reply::reply_mode;
+use chatgpt::prelude::ChatGPTEngine;
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
-use serenity::model::prelude::{Activity, MessageType};
+use serenity::model::prelude::{Activity, GuildId, MessageType, RoleId};
 use serenity::prelude::EventHandler;
 use std::sync::Arc;
 use tracing::log::{error, info};
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const ADMINISTRATOR: u64 = 586824421470109716;
+static VERSION: &str = env!("CARGO_PKG_VERSION");
+static ADMINISTRATOR: u64 = 586824421470109716;
+// 変わることはそうそうないので、定数化
+static APPROVERS_ID: GuildId = GuildId(683939861539192860);
+static SUBSCRIPTION_ROLE_ID: RoleId = RoleId(709699920730390559);
 
 #[async_trait]
 impl EventHandler for EvHandler {
@@ -35,10 +39,21 @@ impl EventHandler for EvHandler {
         );
         let typing = start_typing(http, channel_id);
 
+        let is_subscriber = new_msg
+            .author
+            .has_role(&ctx, APPROVERS_ID, SUBSCRIPTION_ROLE_ID)
+            .await
+            .unwrap();
+        let model = if is_subscriber {
+            ChatGPTEngine::Gpt4
+        } else {
+            ChatGPTEngine::Gpt35Turbo
+        };
+
         match new_msg.kind {
             // 通常メッセージ (チャットモード)
             MessageType::Regular => {
-                if let Err(why) = chat_mode(&ctx, &new_msg).await {
+                if let Err(why) = chat_mode(&ctx, &new_msg, model).await {
                     let _ = new_msg
                         .reply(
                             &ctx,
@@ -53,7 +68,7 @@ impl EventHandler for EvHandler {
             }
             // 返信 (リプライモード)
             MessageType::InlineReply => {
-                if let Err(why) = reply_mode(&ctx, &new_msg).await {
+                if let Err(why) = reply_mode(&ctx, &new_msg, model).await {
                     let _ = new_msg
                         .reply(
                             &ctx,
