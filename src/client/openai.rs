@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use std::time::Duration;
 use tokio::time::timeout;
 
-static TIMEOUT_DURATION: Duration = Duration::from_secs(60);
+static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
 
 /// OpenAI API のクライアントを初期化します。
