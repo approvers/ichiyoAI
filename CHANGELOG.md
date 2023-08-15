@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.5.0...ichiyo_ai-v1.6.0) (2023-08-15)
+
+
+### Features
+
+* タイムアウト秒数を緩和 ([#63](https://github.com/approvers/ichiyoAI/issues/63)) ([225adc2](https://github.com/approvers/ichiyoAI/commit/225adc253e60e236a2ad5908b12bdeb47f0d1da6))
+
 ## [1.5.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.4.0...ichiyo_ai-v1.5.0) (2023-08-14)
 
 
