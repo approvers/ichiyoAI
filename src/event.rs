@@ -1,7 +1,9 @@
 use crate::client::discord::EvHandler;
+use crate::env::get_env;
 use crate::service::chat::chat_mode;
 use crate::service::reply::reply_mode;
 use chatgpt::prelude::ChatGPTEngine;
+use once_cell::sync::Lazy;
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
@@ -15,9 +17,9 @@ use tracing::log::{error, info};
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
 static ADMINISTRATOR: u64 = 586824421470109716;
-// 変わることはそうそうないので、定数化
-static APPROVERS_ID: GuildId = GuildId(683939861539192860);
-static SUBSCRIPTION_ROLE_ID: RoleId = RoleId(709699920730390559);
+static GUILD_ID: Lazy<u64> = Lazy::new(|| get_env("GUILD_ID").parse().unwrap());
+static SUBSCRIPTION_ROLE_ID: Lazy<u64> =
+    Lazy::new(|| get_env("SUBSCRIPTION_ROLE_ID").parse().unwrap());
 
 #[async_trait]
 impl EventHandler for EvHandler {
@@ -41,7 +43,7 @@ impl EventHandler for EvHandler {
 
         let is_subscriber = new_msg
             .author
-            .has_role(&ctx, APPROVERS_ID, SUBSCRIPTION_ROLE_ID)
+            .has_role(&ctx, GuildId(*GUILD_ID), RoleId(*SUBSCRIPTION_ROLE_ID))
             .await
             .unwrap();
         let model = if is_subscriber {
