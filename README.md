@@ -32,3 +32,5 @@ docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
 |---------------------|-------------------|---------|
 | `DISCORD_API_TOKEN` | Discord API のトークン | -       |
 | `OPENAI_API_KEY` | OpenAI API のトークン  | -       |
+| `GUILD_ID` | 限界開発鯖の ID | -       |
+| `SUBSCRIBER_ROLE_ID` | 購読者ロールの ID | -       |
