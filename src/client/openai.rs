@@ -1,15 +1,17 @@
 use crate::env::get_env;
 use crate::model::{ReplyMessage, ReplyRole};
-use anyhow::{ensure, Context};
+use anyhow::{Context, Ok};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
-use chatgpt::types::{ChatMessage, CompletionResponse, Role};
+use chatgpt::types::{ChatMessage, Role};
 use once_cell::sync::Lazy;
 use std::time::Duration;
 use tokio::time::timeout;
 
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
+// 会話モード・返信モード で使用するシステムコンテキスト。膨大なレスポンスにならないように抑える目的に使用する。
+static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 2000文字以内に収めること。\n- なるべく簡潔に言うこと。\n- 一般的に知られている単語は説明しない。";
 
 /// OpenAI API のクライアントを初期化します。
 ///
@@ -53,21 +55,34 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// * ChatGPT とのやり取りに失敗する
 /// * 2000文字を超過する
 pub async fn request_message(
-    content: String,
+    request_message: &[ReplyMessage],
     model: ChatGPTEngine,
-) -> anyhow::Result<CompletionResponse> {
+) -> anyhow::Result<String> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
-    let response = match timeout(TIMEOUT_DURATION, client.send_message(content)).await {
-        Ok(result) => result.context("Failed to communicate with ChatGPT")?,
-        Err(_) => return Err(anyhow::anyhow!("Operation timed out.")),
-    };
+    let mut history = request_message
+        .iter()
+        .map(|reply| ChatMessage {
+            content: reply.content.clone(),
+            role: Role::User,
+        })
+        .collect::<Vec<ChatMessage>>();
 
-    ensure!(
-        &response.message().content.len() <= &2000,
-        "Message response exceeded 2000 characters."
+    history.insert(
+        0,
+        ChatMessage {
+            role: Role::System,
+            content: SYSTEM_CONTEXT.to_string(),
+        },
     );
-    Ok(response)
+
+    let response = timeout(TIMEOUT_DURATION, client.send_history(&history))
+        .await
+        .context("Operation timed out.")??;
+
+    let response_message = response.message().content.clone();
+
+    Ok(response_message)
 }
 
 /// ChatGPT に対して一連の会話コンテキストを送信し、レスポンスをリクエストします。
@@ -86,7 +101,7 @@ pub async fn request_reply_message(
 ) -> anyhow::Result<String> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
-    let history = reply_messages
+    let mut history = reply_messages
         .iter()
         .map(|reply| ChatMessage {
             content: reply.content.clone(),
@@ -96,6 +111,14 @@ pub async fn request_reply_message(
             },
         })
         .collect::<Vec<ChatMessage>>();
+
+    history.insert(
+        0,
+        ChatMessage {
+            role: Role::System,
+            content: SYSTEM_CONTEXT.to_string(),
+        },
+    );
 
     let response = timeout(TIMEOUT_DURATION, client.send_history(&history))
         .await
