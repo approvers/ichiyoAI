@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.6.0...ichiyo_ai-v1.7.0) (2023-08-17)
+
+
+### Features
+
+* 2000文字を超えないようにシステムコンテキストを設定する ([#65](https://github.com/approvers/ichiyoAI/issues/65)) ([e892315](https://github.com/approvers/ichiyoAI/commit/e892315991150d25fafcfc02c91415cfbcc5398d))
+
 ## [1.6.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.5.0...ichiyo_ai-v1.6.0) (2023-08-15)
 
 

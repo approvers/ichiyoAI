@@ -519,7 +519,7 @@ dependencies = [
 
 [[package]]
 name = "ichiyo_ai"
-version = "1.6.0"
+version = "1.7.0"
 dependencies = [
  "anyhow",
  "chatgpt_rs",
