@@ -35,7 +35,7 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
             .build()
             .unwrap(),
     )
-    .context("Failed to initialize OpenAI API")?;
+    .context("OpenAI API クライアントの初期化に失敗しました.")?;
 
     Ok(client)
 }
@@ -43,12 +43,12 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 /// ChatGPT に対してメッセージを送信し、レスポンスをリクエストします。
 ///
 /// ### 引数
-/// * `content` -- ChatGPT に送信するメッセージ
+/// * `request_message` -- ChatGPT に送信するメッセージ。[ReplyMessages] を実装しておく必要がある。
 /// * `model` --
 ///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
 ///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
 /// ### 返り値
-/// [CompletionResponse]: ChatGPT からのレスポンス
+/// [String]: ChatGPT からのレスポンス
 ///
 /// ### エラー
 /// 下記条件でエラーが報告されます。
@@ -78,7 +78,7 @@ pub async fn request_message(
 
     let response = timeout(TIMEOUT_DURATION, client.send_history(&history))
         .await
-        .context("Operation timed out.")??;
+        .context("タイムアウトしました, もう一度お試しください.")??;
 
     let response_message = response.message().content.clone();
 
@@ -88,7 +88,7 @@ pub async fn request_message(
 /// ChatGPT に対して一連の会話コンテキストを送信し、レスポンスをリクエストします。
 ///
 /// ### 引数
-/// * `messages` -- ChatGPT　に送信する会話コンテキスト。[ReplyMessages] を実装しておく必要がある。
+/// * `reply_messages` -- ChatGPT　に送信する会話コンテキスト。[ReplyMessages] を実装しておく必要がある。
 /// * `model` --
 ///         使用する ChatGPT のモデルを使用する。使用できるモデルは [ChatGPTEngine] で定義されている物のみ。
 ///         指定しない場合([None])は [ChatGPTEngine::Gpt35Turbo] が使用される。
@@ -122,7 +122,7 @@ pub async fn request_reply_message(
 
     let response = timeout(TIMEOUT_DURATION, client.send_history(&history))
         .await
-        .context("Operation timed out.")??;
+        .context("タイムアウトしました, もう一度お試しください.")??;
 
     let response_message = response.message().content.clone();
 

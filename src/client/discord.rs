@@ -10,7 +10,10 @@ pub async fn start_discord_client(token: &str) -> anyhow::Result<()> {
     let mut client = Client::builder(token, intents)
         .event_handler(EvHandler)
         .await
-        .context("Failed to create a client")?;
+        .context("クライアントの作成に失敗しました.")?;
 
-    client.start().await.context("Failed to start a client")
+    client
+        .start()
+        .await
+        .context("クライアントの起動に失敗しました.")
 }
