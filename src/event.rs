@@ -16,7 +16,6 @@ use std::sync::Arc;
 use tracing::log::{error, info};
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
-static ADMINISTRATOR: u64 = 586824421470109716;
 static GUILD_ID: Lazy<u64> = Lazy::new(|| get_env("GUILD_ID").parse().unwrap());
 static SUBSCRIPTION_ROLE_ID: Lazy<u64> =
     Lazy::new(|| get_env("SUBSCRIPTION_ROLE_ID").parse().unwrap());
@@ -35,10 +34,7 @@ impl EventHandler for EvHandler {
         let http = ctx.clone().http;
         let channel_id = new_msg.channel_id;
 
-        info!(
-            "{sender}: Started a conversation.",
-            sender = new_msg.author.name
-        );
+        info!("{sender}: 会話を開始します.", sender = new_msg.author.name);
         let typing = start_typing(http, channel_id);
 
         let is_subscriber = new_msg
@@ -59,10 +55,7 @@ impl EventHandler for EvHandler {
                     let _ = new_msg
                         .reply(
                             &ctx,
-                            &format!(
-                                "Unexpected error reported! (Chat Mode), Read log <@{mention}> \n```{error}\n```",
-                                mention = ADMINISTRATOR, error = why
-                            ),
+                            &format!("エラーが発生しました. \n```{error}\n```", error = why),
                         )
                         .await;
                     error!("{:?}", why)
@@ -74,10 +67,7 @@ impl EventHandler for EvHandler {
                     let _ = new_msg
                         .reply(
                             &ctx,
-                            &format!(
-                                "Unexpected error reported! (Reply Mode), Read log <@{mention}> \n```{error}\n```",
-                                mention = ADMINISTRATOR, error = why
-                            ),
+                            &format!("エラーが発生しました.\n```{error}\n```", error = why),
                         )
                         .await;
                     error!("{:?}", why)
@@ -88,7 +78,7 @@ impl EventHandler for EvHandler {
 
         typing.stop();
         info!(
-            "{sender}: Conversation completed.",
+            "{sender}: 会話を完了させました.",
             sender = new_msg.author.name
         )
     }
@@ -98,7 +88,7 @@ impl EventHandler for EvHandler {
             .await;
 
         info!(
-            "Successfully connected to {username}! (ID: {userid}) - Using ichiyoAI v{version}",
+            "{username}(ID: {userid}) に接続しました! - ichiyoAI v{version} を使用しています.",
             username = self_bot.user.name,
             userid = self_bot.user.id,
             version = VERSION
@@ -107,5 +97,5 @@ impl EventHandler for EvHandler {
 }
 
 fn start_typing(http: Arc<Http>, target_channel_id: ChannelId) -> Typing {
-    Typing::start(http, u64::from(target_channel_id)).expect("Failed to start typing")
+    Typing::start(http, u64::from(target_channel_id)).expect("タイピングを開始できませんでした.")
 }
