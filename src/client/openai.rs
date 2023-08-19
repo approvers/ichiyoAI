@@ -11,7 +11,8 @@ use tokio::time::timeout;
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
 // 会話モード・返信モード で使用するシステムコンテキスト。膨大なレスポンスにならないように抑える目的に使用する。
-static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 2000文字以内に収めること。\n- なるべく簡潔に言うこと。\n- 一般的に知られている単語は説明しない。";
+// レスポンスの後にメタ情報（利用料金表示など）を含めるため、100字分の余裕を設けている。
+static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。\n- なるべく簡潔に言うこと。\n- 一般的に知られている単語は説明しない。";
 
 /// OpenAI API のクライアントを初期化します。
 ///
