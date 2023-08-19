@@ -2,7 +2,6 @@ use crate::client::openai::request_message;
 use crate::model::{MessageCompletionResult, ReplyMessage, ReplyRole};
 use anyhow::Ok;
 use chatgpt::prelude::ChatGPTEngine;
-use num_format::{Locale, ToFormattedString};
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
@@ -33,10 +32,6 @@ async fn get_reply(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMess
 }
 
 fn format_result(result: MessageCompletionResult, model: ChatGPTEngine) -> String {
-    let pricing: u32 = usage_pricing(result.input_token, result.output_token, model);
-    format!(
-        "{}\n\n`利用料金: ￥{}`",
-        result.message,
-        pricing.to_formatted_string(&Locale::ja)
-    )
+    let pricing = usage_pricing(result.input_token, result.output_token, model);
+    format!("{}\n\n`利用料金: ￥{:.2}`", result.message, pricing)
 }
