@@ -40,7 +40,13 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
             ReplyRole::User
         };
 
-        let content = message.content.replace(mention, "").trim().to_string();
+        let mut content = message.content.replace(mention, "").trim().to_string();
+
+        // 一葉のメッセージの場合、最後の値段表示を削除する
+        if role == ReplyRole::Ichiyo {
+            let len = content.rfind("\n\n").unwrap_or(content.len());
+            content.truncate(len);
+        }
 
         let reply = ReplyMessage { role, content };
 
