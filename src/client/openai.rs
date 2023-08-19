@@ -1,5 +1,5 @@
 use crate::env::get_env;
-use crate::model::{ReplyMessage, ReplyRole};
+use crate::model::{MessageCompletionResult, ReplyMessage, ReplyRole};
 use anyhow::{Context, Ok};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
@@ -57,7 +57,7 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 pub async fn request_message(
     request_message: &[ReplyMessage],
     model: ChatGPTEngine,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<MessageCompletionResult> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let mut history = request_message
@@ -80,9 +80,12 @@ pub async fn request_message(
         .await
         .context("タイムアウトしました, もう一度お試しください.")??;
 
-    let response_message = response.message().content.clone();
+    let result = MessageCompletionResult {
+        message: response.message().content.clone(),
+        token_count: response.usage.total_tokens,
+    };
 
-    Ok(response_message)
+    Ok(result)
 }
 
 /// ChatGPT に対して一連の会話コンテキストを送信し、レスポンスをリクエストします。
@@ -98,7 +101,7 @@ pub async fn request_message(
 pub async fn request_reply_message(
     reply_messages: &[ReplyMessage],
     model: ChatGPTEngine,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<MessageCompletionResult> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let mut history = reply_messages
@@ -124,7 +127,10 @@ pub async fn request_reply_message(
         .await
         .context("タイムアウトしました, もう一度お試しください.")??;
 
-    let response_message = response.message().content.clone();
+    let result = MessageCompletionResult {
+        message: response.message().content.clone(),
+        token_count: response.usage.total_tokens,
+    };
 
-    Ok(response_message)
+    Ok(result)
 }

@@ -8,9 +8,9 @@ use serenity::prelude::Context;
 pub async fn reply_mode(ctx: &Context, msg: &Message, model: ChatGPTEngine) -> anyhow::Result<()> {
     let replies = get_replies(ctx, msg).await?;
     // notes: GPT-4 があまりにも高いため、GPT-3.5 に revert
-    let response_message = request_reply_message(&replies, model).await?;
+    let result = request_reply_message(&replies, model).await?;
 
-    msg.reply_ping(ctx, response_message).await?;
+    msg.reply_ping(ctx, result.message).await?;
 
     Ok(())
 }

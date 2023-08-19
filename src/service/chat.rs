@@ -9,9 +9,9 @@ use crate::model::{ReplyMessage, ReplyRole};
 
 pub async fn chat_mode(ctx: &Context, msg: &Message, model: ChatGPTEngine) -> anyhow::Result<()> {
     let reply = get_reply(ctx, msg).await?;
-    let reply_message = request_message(&reply, model).await?;
+    let result = request_message(&reply, model).await?;
 
-    msg.reply_ping(ctx, reply_message).await?;
+    msg.reply_ping(ctx, result.message).await?;
 
     Ok(())
 }
