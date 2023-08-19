@@ -13,5 +13,6 @@ pub struct ReplyMessage {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MessageCompletionResult {
     pub message: String,
-    pub token_count: u32,
+    pub input_token: u32,
+    pub output_token: u32,
 }

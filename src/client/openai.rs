@@ -83,7 +83,8 @@ pub async fn request_message(
 
     let result = MessageCompletionResult {
         message: response.message().content.clone(),
-        token_count: response.usage.total_tokens,
+        input_token: response.usage.prompt_tokens,
+        output_token: response.usage.completion_tokens,
     };
 
     Ok(result)
@@ -130,7 +131,8 @@ pub async fn request_reply_message(
 
     let result = MessageCompletionResult {
         message: response.message().content.clone(),
-        token_count: response.usage.total_tokens,
+        input_token: response.usage.prompt_tokens,
+        output_token: response.usage.completion_tokens,
     };
 
     Ok(result)
