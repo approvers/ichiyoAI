@@ -1,5 +1,5 @@
 use crate::env::get_env;
-use crate::model::{ReplyMessage, ReplyRole};
+use crate::model::{MessageCompletionResult, ReplyMessage, ReplyRole};
 use anyhow::{Context, Ok};
 use chatgpt::config::ModelConfigurationBuilder;
 use chatgpt::prelude::{ChatGPT, ChatGPTEngine};
@@ -11,7 +11,8 @@ use tokio::time::timeout;
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 static OPENAI_API_KEY: Lazy<String> = Lazy::new(|| get_env("OPENAI_API_KEY"));
 // 会話モード・返信モード で使用するシステムコンテキスト。膨大なレスポンスにならないように抑える目的に使用する。
-static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 2000文字以内に収めること。\n- なるべく簡潔に言うこと。\n- 一般的に知られている単語は説明しない。";
+// レスポンスの後にメタ情報（利用料金表示など）を含めるため、100字分の余裕を設けている。
+static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。\n- なるべく簡潔に言うこと。\n- 一般的に知られている単語は説明しない。";
 
 /// OpenAI API のクライアントを初期化します。
 ///
@@ -57,7 +58,7 @@ fn init_client(api_key: &str, model: Option<ChatGPTEngine>) -> anyhow::Result<Ch
 pub async fn request_message(
     request_message: &[ReplyMessage],
     model: ChatGPTEngine,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<MessageCompletionResult> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let mut history = request_message
@@ -80,9 +81,13 @@ pub async fn request_message(
         .await
         .context("タイムアウトしました, もう一度お試しください.")??;
 
-    let response_message = response.message().content.clone();
+    let result = MessageCompletionResult {
+        message: response.message().content.clone(),
+        input_token: response.usage.prompt_tokens,
+        output_token: response.usage.completion_tokens,
+    };
 
-    Ok(response_message)
+    Ok(result)
 }
 
 /// ChatGPT に対して一連の会話コンテキストを送信し、レスポンスをリクエストします。
@@ -98,7 +103,7 @@ pub async fn request_message(
 pub async fn request_reply_message(
     reply_messages: &[ReplyMessage],
     model: ChatGPTEngine,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<MessageCompletionResult> {
     let client = init_client(OPENAI_API_KEY.as_str(), Some(model))?;
 
     let mut history = reply_messages
@@ -124,7 +129,11 @@ pub async fn request_reply_message(
         .await
         .context("タイムアウトしました, もう一度お試しください.")??;
 
-    let response_message = response.message().content.clone();
+    let result = MessageCompletionResult {
+        message: response.message().content.clone(),
+        input_token: response.usage.prompt_tokens,
+        output_token: response.usage.completion_tokens,
+    };
 
-    Ok(response_message)
+    Ok(result)
 }
