@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.7.0...ichiyo_ai-v1.8.0) (2023-08-20)
+
+
+### Features
+
+* レスポンスメッセージに利用料金の表示を追加 ([#72](https://github.com/approvers/ichiyoAI/issues/72)) ([2d2c0fc](https://github.com/approvers/ichiyoAI/commit/2d2c0fc5a81d6bf86ba794ae2c74f133df357c18))
+
 ## [1.7.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.6.0...ichiyo_ai-v1.7.0) (2023-08-17)
 
 
