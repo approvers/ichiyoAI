@@ -3,7 +3,7 @@ FROM rust:1.71.1-bullseye as Builder
 WORKDIR /root/app
 COPY --chown=root:root . .
 
-RUN cargo build --release --bin ichiyo_ai
+RUN cargo build --release --bin ichiyo_ai --features enable_sentry
 
 FROM debian:bullseye-slim as Runner
 
