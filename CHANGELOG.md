@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.8.0...ichiyo_ai-v1.9.0) (2023-08-24)
+
+
+### Features
+
+* sentry のセットアップ ([#81](https://github.com/approvers/ichiyoAI/issues/81)) ([011c1bd](https://github.com/approvers/ichiyoAI/commit/011c1bd91e5b4caa5dc4472d4132510f83a01218))
+
 ## [1.8.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.7.0...ichiyo_ai-v1.8.0) (2023-08-20)
 
 
