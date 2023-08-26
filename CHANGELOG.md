@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.1...ichiyo_ai-v1.9.2) (2023-08-26)
+
+
+### Bug Fixes
+
+* コンテキストが途中で欠如する問題の修正 ([#85](https://github.com/approvers/ichiyoAI/issues/85)) ([2fab02e](https://github.com/approvers/ichiyoAI/commit/2fab02e7897a3dc2c28f701f48faa1dd6c28c2ff))
+
 ## [1.9.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.0...ichiyo_ai-v1.9.1) (2023-08-26)
 
 
