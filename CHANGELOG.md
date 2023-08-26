@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.0...ichiyo_ai-v1.9.1) (2023-08-26)
+
+
+### Bug Fixes
+
+* Docker コンテナ上のSSL認証エラーを修正 ([#83](https://github.com/approvers/ichiyoAI/issues/83)) ([f09d97d](https://github.com/approvers/ichiyoAI/commit/f09d97d2a9d64b8f47d4775598289cc233eeef17))
+
 ## [1.9.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.8.0...ichiyo_ai-v1.9.0) (2023-08-24)
 
 
