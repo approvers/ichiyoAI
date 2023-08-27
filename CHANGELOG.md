@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.2...ichiyo_ai-v1.10.0) (2023-08-27)
+
+
+### Features
+
+* 使用モデルの表示を追加 ([#89](https://github.com/approvers/ichiyoAI/issues/89)) ([96f8805](https://github.com/approvers/ichiyoAI/commit/96f8805c276ab3c83b631b3ac2dd463f000f1ab8))
+
 ## [1.9.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.1...ichiyo_ai-v1.9.2) (2023-08-26)
 
 
