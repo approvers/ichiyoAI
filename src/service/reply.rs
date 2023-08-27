@@ -61,5 +61,10 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
 // chatにあるものと同一だが、変更の可能性が高いためあえて共通化しない
 fn format_result(result: MessageCompletionResult, model: ChatGPTEngine) -> String {
     let pricing = usage_pricing(result.input_token, result.output_token, model);
-    format!("{}\n\n`利用料金: ￥{:.2}`", result.message, pricing)
+    format!(
+        "{}\n\n`利用料金: ￥{:.2}` - `使用モデル: {}`",
+        result.message,
+        pricing,
+        model.to_string()
+    )
 }
