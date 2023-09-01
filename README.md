@@ -7,10 +7,6 @@
 
 ichiyoAI は限界開発鯖で使用できるチャットAIです。
 
-## Usage
-
-使い方等は [ichiyoAI Document](./docs/README.md) を参照してください。
-
 ## Installation
 
 ```shell
