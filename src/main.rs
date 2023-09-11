@@ -17,7 +17,6 @@ async fn main() -> anyhow::Result<()> {
         let _guard = sentry::init((
             "https://f3fd3cb315dd947285acd406f656e0f9@o4505761355988992.ingest.sentry.io/4505761369030656", sentry::ClientOptions {
                 release: sentry::release_name!(),
-                enable_profiling: true,
                 ..Default::default()
             }
         ));
