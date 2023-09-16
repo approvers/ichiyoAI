@@ -53,7 +53,7 @@ impl EventHandler for EvHandler {
             MessageType::Regular => {
                 if let Err(why) = chat_mode(&ctx, &new_msg, model).await {
                     let _ = new_msg
-                        .reply(
+                        .reply_ping(
                             &ctx,
                             &format!("エラーが発生しました. \n```{error}\n```", error = why),
                         )
@@ -65,7 +65,7 @@ impl EventHandler for EvHandler {
             MessageType::InlineReply => {
                 if let Err(why) = reply_mode(&ctx, &new_msg, model).await {
                     let _ = new_msg
-                        .reply(
+                        .reply_ping(
                             &ctx,
                             &format!("エラーが発生しました.\n```{error}\n```", error = why),
                         )
