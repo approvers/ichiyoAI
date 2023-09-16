@@ -85,6 +85,7 @@ pub async fn request_message(
         message: response.message().content.clone(),
         input_token: response.usage.prompt_tokens,
         output_token: response.usage.completion_tokens,
+        total_token: response.usage.total_tokens,
     };
 
     Ok(result)
@@ -133,6 +134,7 @@ pub async fn request_reply_message(
         message: response.message().content.clone(),
         input_token: response.usage.prompt_tokens,
         output_token: response.usage.completion_tokens,
+        total_token: response.usage.total_tokens,
     };
 
     Ok(result)
