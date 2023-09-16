@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.10.0...ichiyo_ai-v1.11.0) (2023-09-16)
+
+
+### Features
+
+* 応答メッセージに合計トークン数を表示するように ([#102](https://github.com/approvers/ichiyoAI/issues/102)) ([19136a4](https://github.com/approvers/ichiyoAI/commit/19136a4a434c05d337c541b465926f54b9924d2d))
+
+
+### Bug Fixes
+
+* エラーメッセージがメンションされず送信される問題の修正 ([#100](https://github.com/approvers/ichiyoAI/issues/100)) ([e472107](https://github.com/approvers/ichiyoAI/commit/e472107043f2b6a79b190fc6ce8cdc0f21ab56ad))
+
 ## [1.10.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.9.2...ichiyo_ai-v1.10.0) (2023-08-27)
 
 
