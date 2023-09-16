@@ -15,4 +15,5 @@ pub struct MessageCompletionResult {
     pub message: String,
     pub input_token: u32,
     pub output_token: u32,
+    pub total_token: u32,
 }
