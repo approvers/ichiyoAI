@@ -10,7 +10,7 @@ enable_sentry = []
 
 [dependencies]
 anyhow = { version = "1.0" }
-chatgpt_rs = { version = "=1.1.13" }
+chatgpt_rs = { version = "=1.2.3" }
 dotenvy = { version = "0.15" }
 once_cell = { version = "1.18" }
 sentry = "0.31.6"
