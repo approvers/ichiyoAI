@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.11.0...ichiyo_ai-v1.11.1) (2023-09-17)
+
+
+### Bug Fixes
+
+* 利用料金表示の誤字を修正 ([#103](https://github.com/approvers/ichiyoAI/issues/103)) ([8c7964b](https://github.com/approvers/ichiyoAI/commit/8c7964bc2b175bdf43537c8a94264854ee1a3825))
+
 ## [1.11.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.10.0...ichiyo_ai-v1.11.0) (2023-09-16)
 
 
