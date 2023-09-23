@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.11.1...ichiyo_ai-v1.12.0) (2023-09-23)
+
+
+### Features
+
+* 5文字以上コンテキストがない会話は強制的に終了するように ([#106](https://github.com/approvers/ichiyoAI/issues/106)) ([e215af3](https://github.com/approvers/ichiyoAI/commit/e215af3f551a51670d71d1cdafca4a4ef66cf0f2))
+
 ## [1.11.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.11.0...ichiyo_ai-v1.11.1) (2023-09-17)
 
 
