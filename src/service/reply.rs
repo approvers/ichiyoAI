@@ -41,6 +41,12 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
 
         let mut content = message.content.replace(mention, "").trim().to_string();
 
+        if content.chars().count() < 5 {
+            return Err(anyhow::anyhow!(
+                "送信メッセージが短すぎます。5文字以上入力してください。"
+            ));
+        }
+
         // 一葉のメッセージの場合、最後の値段表示を削除する
         if role == ReplyRole::Ichiyo {
             let len = content.rfind("\n\n").unwrap_or(content.len());

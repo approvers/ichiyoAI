@@ -22,6 +22,12 @@ async fn get_reply(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMess
     let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user_id()));
     let content = msg.content.replace(mention, "").trim().to_string();
 
+    if content.chars().count() < 5 {
+        return Err(anyhow::anyhow!(
+            "送信メッセージが短すぎます。5文字以上入力してください。"
+        ));
+    }
+
     let mut replies: Vec<ReplyMessage> = vec![ReplyMessage {
         role: ReplyRole::User,
         content,
