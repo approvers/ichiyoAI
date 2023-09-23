@@ -5,15 +5,11 @@ edition = "2021"
 license = "MIT"
 repository = "https://github.com/approvers/ichiyoAI"
 
-[features]
-enable_sentry = []
-
 [dependencies]
 anyhow = { version = "1.0" }
 chatgpt_rs = { version = "=1.1.13" }
 dotenvy = { version = "0.15" }
 once_cell = { version = "1.18" }
-sentry = "0.31.7"
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
 
