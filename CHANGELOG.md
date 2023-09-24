@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.0...ichiyo_ai-v1.12.1) (2023-09-24)
+
+
+### Bug Fixes
+
+* Docker Image のビルドに失敗する問題の修正 ([#109](https://github.com/approvers/ichiyoAI/issues/109)) ([5dd8a39](https://github.com/approvers/ichiyoAI/commit/5dd8a3917762330bddf9d3b7526f1f635a247bdb))
+
 ## [1.12.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.11.1...ichiyo_ai-v1.12.0) (2023-09-23)
 
 
