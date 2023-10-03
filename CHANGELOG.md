@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.1...ichiyo_ai-v1.12.2) (2023-10-03)
+
+
+### Bug Fixes
+
+* 返信モードのコンテキストが5文字以上なのにエラーになる問題の修正 ([#112](https://github.com/approvers/ichiyoAI/issues/112)) ([152613e](https://github.com/approvers/ichiyoAI/commit/152613e6555b2fa86df16e3c8deaac0e0bcbaefb))
+
 ## [1.12.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.0...ichiyo_ai-v1.12.1) (2023-09-24)
 
 
