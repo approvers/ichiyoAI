@@ -39,7 +39,7 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
             ReplyRole::User
         };
 
-        let mut content = message.content.replace(mention, "").trim().to_string();
+        let mut content = msg.content.replace(mention, "").trim().to_string();
 
         if content.chars().count() < 5 {
             return Err(anyhow::anyhow!(
