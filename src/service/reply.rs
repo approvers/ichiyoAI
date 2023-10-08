@@ -64,6 +64,7 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
 }
 
 // chatにあるものと同一だが、変更の可能性が高いためあえて共通化しない
+// TODO (MikuroXina): 同じ概念をフォーマットするものであるため、共通化すべき
 fn format_result(result: MessageCompletionResult, model: &str) -> String {
     let pricing = usage_pricing(result.input_token, result.output_token, model);
     format!(
