@@ -1,13 +1,12 @@
 use crate::client::openai::request_reply_message;
 use crate::model::{MessageCompletionResult, ReplyMessage, ReplyRole};
-use chatgpt::prelude::ChatGPTEngine;
 use once_cell::sync::OnceCell;
 use serenity::model::prelude::Message;
 use serenity::prelude::Context;
 
 use super::pricing::usage_pricing;
 
-pub async fn reply_mode(ctx: &Context, msg: &Message, model: ChatGPTEngine) -> anyhow::Result<()> {
+pub async fn reply_mode(ctx: &Context, msg: &Message, model: &str) -> anyhow::Result<()> {
     let replies = get_replies(ctx, msg).await?;
     // notes: GPT-4 があまりにも高いため、GPT-3.5 に revert
     let result = request_reply_message(&replies, model).await?;
@@ -65,13 +64,11 @@ async fn get_replies(ctx: &Context, msg: &Message) -> anyhow::Result<Vec<ReplyMe
 }
 
 // chatにあるものと同一だが、変更の可能性が高いためあえて共通化しない
-fn format_result(result: MessageCompletionResult, model: ChatGPTEngine) -> String {
+// TODO (MikuroXina): 同じ概念をフォーマットするものであるため、共通化すべき
+fn format_result(result: MessageCompletionResult, model: &str) -> String {
     let pricing = usage_pricing(result.input_token, result.output_token, model);
     format!(
         "{}\n\n`累計利用料金: ￥{:.2}(合計トークン: {})` - `使用モデル: {}`",
-        result.message,
-        pricing,
-        result.total_token,
-        model.to_string()
+        result.message, pricing, result.total_token, model
     )
 }

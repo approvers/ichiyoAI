@@ -2,7 +2,6 @@ use crate::client::discord::EvHandler;
 use crate::env::get_env;
 use crate::service::chat::chat_mode;
 use crate::service::reply::reply_mode;
-use chatgpt::prelude::ChatGPTEngine;
 use once_cell::sync::Lazy;
 use serenity::async_trait;
 use serenity::client::Context;
@@ -43,9 +42,9 @@ impl EventHandler for EvHandler {
             .await
             .unwrap();
         let model = if is_subscriber {
-            ChatGPTEngine::Gpt4
+            "gpt-4"
         } else {
-            ChatGPTEngine::Gpt35Turbo
+            "gpt-3.5-turbo"
         };
 
         match new_msg.kind {
