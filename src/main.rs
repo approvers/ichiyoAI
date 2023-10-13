@@ -5,8 +5,6 @@ use env::get_env;
 mod client;
 mod env;
 mod event;
-mod model;
-mod service;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
