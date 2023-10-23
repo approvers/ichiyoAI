@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.13.0...ichiyo_ai-v1.14.0) (2023-10-23)
+
+
+### Features
+
+* ichiyoAI v1.13.0 ([#120](https://github.com/approvers/ichiyoAI/issues/120)) ([6c714a3](https://github.com/approvers/ichiyoAI/commit/6c714a3c08afa47c688a5927419e3a73b855b389))
+
 ## [1.13.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.2...ichiyo_ai-v1.13.0) (2023-10-23)
 
 
