@@ -5,8 +5,6 @@ use async_openai::types::CreateChatCompletionRequestArgs;
 use async_openai::Client;
 use std::time::Duration;
 use tokio::time::timeout;
-use tracing::info;
-use tracing::log::debug;
 
 pub static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。";
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);

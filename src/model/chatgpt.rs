@@ -1,5 +1,4 @@
-use crate::model::discord::DiscordMessageModel;
-use async_openai::types::{ChatCompletionRequestMessage, ChatCompletionRequestMessageArgs};
+use async_openai::types::ChatCompletionRequestMessage;
 use typed_builder::TypedBuilder;
 
 #[derive(TypedBuilder)]

@@ -8,7 +8,7 @@ use async_openai::types::{ChatCompletionRequestMessage, ChatCompletionRequestMes
 use once_cell::sync::OnceCell;
 use serenity::async_trait;
 use serenity::client::Context;
-use serenity::http::{CacheHttp, Http, Typing};
+use serenity::http::{Http, Typing};
 use serenity::model::channel::{Message, MessageType};
 use serenity::model::gateway::Ready;
 use serenity::model::id::{ChannelId, GuildId, RoleId};
@@ -126,7 +126,6 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
     }
 
     replies.reverse();
-    info!("{:?}", replies);
 
     let request = RequestMessageModel::builder()
         .replies(replies)
