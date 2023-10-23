@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.2...ichiyo_ai-v1.13.0) (2023-10-23)
+
+
+### Features
+
+* recreate ChatGPT logic ([#122](https://github.com/approvers/ichiyoAI/issues/122)) ([699810b](https://github.com/approvers/ichiyoAI/commit/699810b0219b8febaee0063cba4ad982d4eca750))
+
 ## [1.12.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.12.1...ichiyo_ai-v1.12.2) (2023-10-03)
 
 
