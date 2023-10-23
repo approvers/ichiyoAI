@@ -24,9 +24,9 @@ docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
 
 設定の例は [.env.example](./.env.example) で確認できます。
 
-| Key                 | Description       | required |
-|---------------------|-------------------|----------|
-| `DISCORD_API_TOKEN` | Discord API のトークン | `Yes`    |
-| `OPENAI_API_KEY`    | OpenAI API のトークン  | `Yes`    |
-| `GUILD_ID`          | 限界開発鯖の ID         | `Yes`    |
-| `TAXPAYER_ROLE_ID`  | 購読者ロールの ID        | `No`     |
+| Key                 | Description       | Default |
+|---------------------|-------------------|---------|
+| `DISCORD_API_TOKEN` | Discord API のトークン | -       |
+| `OPENAI_API_KEY` | OpenAI API のトークン  | -       |
+| `GUILD_ID` | 限界開発鯖の ID | -       |
+| `SUBSCRIBER_ROLE_ID` | 購読者ロールの ID | -       |

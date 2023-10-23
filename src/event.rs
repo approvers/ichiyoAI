@@ -1,150 +1,98 @@
-use crate::adapters::chatgpt::{request_chatgpt_message, SYSTEM_CONTEXT};
-use crate::adapters::discord::{format_result, reply_completion_result};
-use crate::model::chatgpt::RequestMessageModel;
-use crate::model::discord::DiscordReplyMessageModel;
-use crate::model::env::ICHIYOAI_ENV;
-use crate::model::EvHandler;
-use async_openai::types::{ChatCompletionRequestMessage, ChatCompletionRequestMessageArgs, Role};
-use once_cell::sync::OnceCell;
+use crate::client::discord::EvHandler;
+use crate::env::get_env;
+use crate::service::chat::chat_mode;
+use crate::service::reply::reply_mode;
+use once_cell::sync::Lazy;
 use serenity::async_trait;
 use serenity::client::Context;
 use serenity::http::{Http, Typing};
-use serenity::model::channel::{Message, MessageType};
+use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::id::{ChannelId, GuildId, RoleId};
-use serenity::model::prelude::Activity;
+use serenity::model::id::ChannelId;
+use serenity::model::prelude::{Activity, GuildId, MessageType, RoleId};
 use serenity::prelude::EventHandler;
 use std::sync::Arc;
 use tracing::log::{error, info};
 
+static VERSION: &str = env!("CARGO_PKG_VERSION");
+static GUILD_ID: Lazy<u64> = Lazy::new(|| get_env("GUILD_ID").parse().unwrap());
+static SUBSCRIPTION_ROLE_ID: Lazy<u64> =
+    Lazy::new(|| get_env("SUBSCRIPTION_ROLE_ID").parse().unwrap());
+
 #[async_trait]
 impl EventHandler for EvHandler {
-    async fn message(&self, ctx: Context, message: Message) {
-        if message.author.bot || message.is_private() {
+    async fn message(&self, ctx: Context, new_msg: Message) {
+        if new_msg.author.bot || new_msg.is_private() {
             return;
         }
 
-        if let Ok(false) = message.mentions_me(&ctx).await {
+        if let Ok(false) = new_msg.mentions_me(&ctx).await {
             return;
         }
 
-        match process_ichiyoai(ctx, message).await {
-            Ok(()) => (),
-            Err(why) => error!("Processing message failed with error: {}", why),
+        let http = ctx.clone().http;
+        let channel_id = new_msg.channel_id;
+
+        info!("{sender}: 会話を開始します.", sender = new_msg.author.name);
+        let typing = start_typing(http, channel_id);
+
+        let is_subscriber = new_msg
+            .author
+            .has_role(&ctx, GuildId(*GUILD_ID), RoleId(*SUBSCRIPTION_ROLE_ID))
+            .await
+            .unwrap();
+        let model = if is_subscriber {
+            "gpt-4"
+        } else {
+            "gpt-3.5-turbo"
+        };
+
+        match new_msg.kind {
+            // 通常メッセージ (チャットモード)
+            MessageType::Regular => {
+                if let Err(why) = chat_mode(&ctx, &new_msg, model).await {
+                    let _ = new_msg
+                        .reply_ping(
+                            &ctx,
+                            &format!("エラーが発生しました. \n```{error}\n```", error = why),
+                        )
+                        .await;
+                    error!("{:?}", why)
+                }
+            }
+            // 返信 (リプライモード)
+            MessageType::InlineReply => {
+                if let Err(why) = reply_mode(&ctx, &new_msg, model).await {
+                    let _ = new_msg
+                        .reply_ping(
+                            &ctx,
+                            &format!("エラーが発生しました.\n```{error}\n```", error = why),
+                        )
+                        .await;
+                    error!("{:?}", why)
+                }
+            }
+            _ => (),
         }
+
+        typing.stop();
+        info!(
+            "{sender}: 会話を完了させました.",
+            sender = new_msg.author.name
+        )
     }
 
     async fn ready(&self, ctx: Context, self_bot: Ready) {
-        info!("Starting...");
-
-        let version = &ICHIYOAI_ENV.get().unwrap().cargo_pkg_version;
-        ctx.set_activity(Activity::playing(&format!("v{}", version)))
+        ctx.set_activity(Activity::playing(&format!("v{}", VERSION)))
             .await;
 
-        info!("Running ichiyoAI v{}", version);
         info!(
-            "Connected!: {name}(Id:{id})",
-            name = self_bot.user.name,
-            id = self_bot.user.id
+            "{username}(ID: {userid}) に接続しました! - ichiyoAI v{version} を使用しています.",
+            username = self_bot.user.name,
+            userid = self_bot.user.id,
+            version = VERSION
         )
     }
-}
-
-async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> {
-    static OWN_MENTION: OnceCell<String> = OnceCell::new();
-    let channel_id = message.channel_id;
-    let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user_id()));
-    let mut content = message.content.replace(mention, "").trim().to_string();
-
-    if content.chars().count() < 5 {
-        return Err(anyhow::anyhow!(
-            "Message is too short. Please enter at least 5 characters."
-        ));
-    }
-
-    let typing = start_typing(ctx.http.clone(), channel_id);
-    let is_subscriber = message
-        .author
-        .has_role(
-            &ctx,
-            GuildId(ICHIYOAI_ENV.get().unwrap().guild_id),
-            RoleId(ICHIYOAI_ENV.get().unwrap().taxpayer_role_id),
-        )
-        .await
-        .unwrap_or(false);
-    let model = if is_subscriber {
-        "gpt-4".to_string()
-    } else {
-        "gpt-3.5-turbo".to_string()
-    };
-    let mut replies: Vec<ChatCompletionRequestMessage> =
-        vec![ChatCompletionRequestMessageArgs::default()
-            .role(Role::System)
-            .content(SYSTEM_CONTEXT)
-            .build()?];
-
-    match message.kind {
-        MessageType::Regular => {
-            let reply = ChatCompletionRequestMessageArgs::default()
-                .role(Role::User)
-                .content(content)
-                .build()?;
-            replies.push(reply);
-        }
-        MessageType::InlineReply => {
-            let mut target_message_id = message.referenced_message.as_ref().map(|m| m.id);
-            while let Some(message_id) = target_message_id {
-                let message = ctx
-                    .http
-                    .clone()
-                    .get_message(channel_id.0, message_id.0)
-                    .await?;
-
-                let role = if message.is_own(ctx.clone()) {
-                    Role::Assistant
-                } else {
-                    Role::User
-                };
-
-                if role == Role::Assistant {
-                    let len = content.rfind("\n\n").unwrap_or(content.len());
-                    content.truncate(len);
-                }
-
-                let content = message.content.replace(mention, "").trim().to_string();
-
-                let reply = ChatCompletionRequestMessageArgs::default()
-                    .role(role)
-                    .content(content)
-                    .build()?;
-
-                replies.push(reply);
-                target_message_id = message.referenced_message.map(|m| m.id);
-            }
-        }
-        _ => (),
-    }
-
-    replies.reverse();
-
-    let request = RequestMessageModel::builder()
-        .replies(replies)
-        .model(model.clone())
-        .build();
-    let result = request_chatgpt_message(request).await?;
-
-    let reply = DiscordReplyMessageModel::builder()
-        .http(ctx.http.clone())
-        .target_message(message.clone())
-        .formatted_result(format_result(result, &model))
-        .build();
-
-    if let Err(why) = reply_completion_result(reply).await {
-        error!("{}", why)
-    }
-    typing.stop();
-
-    Ok(())
 }
 
 fn start_typing(http: Arc<Http>, target_channel_id: ChannelId) -> Typing {

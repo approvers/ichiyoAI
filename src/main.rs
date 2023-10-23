@@ -1,27 +1,21 @@
-use crate::client::discord::create_discord_client;
-use crate::model::env::{IchiyoAiEnv, ICHIYOAI_ENV};
-use dotenvy::dotenv;
-use tracing::log::error;
+use crate::env::load_env;
+use client::discord::start_discord_client;
+use env::get_env;
 
-mod adapters;
 mod client;
+mod env;
 mod event;
 mod model;
+mod service;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv().ok();
+    load_env();
     tracing_subscriber::fmt().compact().init();
 
-    ICHIYOAI_ENV
-        .set(envy::from_env::<IchiyoAiEnv>().expect("Failed to load enviroment variables"))
-        .unwrap();
+    let token = get_env("DISCORD_API_TOKEN");
 
-    let mut client = create_discord_client(&ICHIYOAI_ENV.get().unwrap().discord_api_token).await?;
-
-    if let Err(why) = client.start().await {
-        error!("Failed to starting ichiyoAI: {}", why)
-    }
+    start_discord_client(token.as_str()).await?;
 
     Ok(())
 }
