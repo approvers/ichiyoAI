@@ -13,6 +13,7 @@ once_cell = { version = "1.18" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
 envy = { version = "0.4.2" }
+typed-builder = { version = "0.18.0" }
 
 [dependencies.serenity]
 version = "0.11"
