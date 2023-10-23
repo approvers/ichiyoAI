@@ -3,6 +3,7 @@ use crate::model::env::{IchiyoAiEnv, ICHIYOAI_ENV};
 use dotenvy::dotenv;
 use tracing::log::error;
 
+mod adapters;
 mod client;
 mod event;
 mod model;
