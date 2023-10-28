@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.2...ichiyo_ai-v1.15.3) (2023-10-28)
+
+
+### Bug Fixes
+
+* 使用するトークン長が短くレスポンスが不完全になる問題の修正 ([#133](https://github.com/approvers/ichiyoAI/issues/133)) ([72c134f](https://github.com/approvers/ichiyoAI/commit/72c134f8979c3a4ac0ce8a5e17b302143f58d9a8))
+
 ## [1.15.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.1...ichiyo_ai-v1.15.2) (2023-10-28)
 
 
