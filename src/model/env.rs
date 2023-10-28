@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 pub struct IchiyoAiEnv {
     pub discord_api_token: String,
     pub openai_api_key: String,
-    pub cargo_pkg_version: String,
     pub guild_id: u64,
     pub taxpayer_role_id: u64,
 }
