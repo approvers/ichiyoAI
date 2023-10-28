@@ -19,7 +19,6 @@ pub async fn request_chatgpt_message(
     let client = create_chatgpt_client().await?;
 
     let client_request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(512u16)
         .model(request.model)
         .messages(request.replies)
         .build()?;
