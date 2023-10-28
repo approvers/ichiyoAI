@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.4](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.3...ichiyo_ai-v1.15.4) (2023-10-28)
+
+
+### Bug Fixes
+
+* コンテキストが正しく維持されない問題を修正 ([#135](https://github.com/approvers/ichiyoAI/issues/135)) ([98c1a62](https://github.com/approvers/ichiyoAI/commit/98c1a62f8169ce1e79fa6b2d59f72bc541963185))
+
 ## [1.15.3](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.2...ichiyo_ai-v1.15.3) (2023-10-28)
 
 
