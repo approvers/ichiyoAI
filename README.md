@@ -29,4 +29,4 @@ docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
 | `DISCORD_API_TOKEN` | Discord API のトークン | `Yes`    |
 | `OPENAI_API_KEY`    | OpenAI API のトークン  | `Yes`    |
 | `GUILD_ID`          | 限界開発鯖の ID         | `Yes`    |
-| `TAXPAYER_ROLE_ID`  | 購読者ロールの ID        | `No`     |
+| `TAXPAYER_ROLE_ID`  | 購読者ロールの ID        | `Yes`     |
