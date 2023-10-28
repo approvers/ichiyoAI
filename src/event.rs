@@ -37,7 +37,7 @@ impl EventHandler for EvHandler {
     async fn ready(&self, ctx: Context, self_bot: Ready) {
         info!("Starting...");
 
-        let version = &ICHIYOAI_ENV.get().unwrap().cargo_pkg_version;
+        let version = env!("CARGO_PKG_VERSION");
         ctx.set_activity(Activity::playing(&format!("v{}", version)))
             .await;
 
