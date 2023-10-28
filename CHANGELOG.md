@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.2](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.1...ichiyo_ai-v1.15.2) (2023-10-28)
+
+
+### Bug Fixes
+
+* Docker Container 上で動作しない問題の修正 ([#131](https://github.com/approvers/ichiyoAI/issues/131)) ([458db6c](https://github.com/approvers/ichiyoAI/commit/458db6c3b2dd0d1282942b7d29ef7392c7615833))
+
 ## [1.15.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.0...ichiyo_ai-v1.15.1) (2023-10-28)
 
 
