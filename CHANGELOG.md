@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.0...ichiyo_ai-v1.15.1) (2023-10-28)
+
+
+### Bug Fixes
+
+* バージョン取得の方法を修正 ([#129](https://github.com/approvers/ichiyoAI/issues/129)) ([1531a4d](https://github.com/approvers/ichiyoAI/commit/1531a4dd0fb0d8d26a3e29582b808aa1786cc56b))
+
 ## [1.15.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.14.0...ichiyo_ai-v1.15.0) (2023-10-25)
 
 
