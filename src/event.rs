@@ -54,7 +54,7 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
     static OWN_MENTION: OnceCell<String> = OnceCell::new();
     let channel_id = message.channel_id;
     let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user_id()));
-    let mut content = message.content.replace(mention, "").trim().to_string();
+    let content = message.content.replace(mention, "").trim().to_string();
 
     if content.chars().count() < 5 {
         return Err(anyhow::anyhow!(
@@ -92,26 +92,32 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
             replies.push(reply);
         }
         MessageType::InlineReply => {
+            let reply = ChatCompletionRequestMessageArgs::default()
+                .role(Role::User)
+                .content(content)
+                .build()?;
+            replies.push(reply);
+
             let mut target_message_id = message.referenced_message.as_ref().map(|m| m.id);
             while let Some(message_id) = target_message_id {
-                let message = ctx
+                let ref_message = ctx
                     .http
                     .clone()
                     .get_message(channel_id.0, message_id.0)
                     .await?;
 
-                let role = if message.is_own(ctx.clone()) {
+                let role = if ref_message.is_own(ctx.clone()) {
                     Role::Assistant
                 } else {
                     Role::User
                 };
 
+                let mut content = ref_message.content.replace(mention, "").trim().to_string();
+
                 if role == Role::Assistant {
                     let len = content.rfind("\n\n").unwrap_or(content.len());
                     content.truncate(len);
                 }
-
-                let content = message.content.replace(mention, "").trim().to_string();
 
                 let reply = ChatCompletionRequestMessageArgs::default()
                     .role(role)
@@ -119,13 +125,15 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
                     .build()?;
 
                 replies.push(reply);
-                target_message_id = message.referenced_message.map(|m| m.id);
+                target_message_id = ref_message.referenced_message.map(|m| m.id);
             }
         }
         _ => (),
     }
 
     replies.reverse();
+
+    info!("{:?}", replies.iter());
 
     let request = RequestMessageModel::builder()
         .replies(replies)
