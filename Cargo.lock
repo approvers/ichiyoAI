@@ -34,9 +34,9 @@ dependencies = [
 
 [[package]]
 name = "async-openai"
-version = "0.14.3"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e1df052c2bd7b241fc828bc2fda74ce9a7ef05e0a593c37275aaaba52caf49d"
+checksum = "716fd3fa452e27f7c820daab6f1d010cf3359f3ad6fad275d228505529f72199"
 dependencies = [
  "async-convert",
  "backoff",
@@ -46,6 +46,7 @@ dependencies = [
  "rand",
  "reqwest",
  "reqwest-eventsource",
+ "secrecy",
  "serde",
  "serde_json",
  "thiserror",
@@ -1106,6 +1107,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "secrecy"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bd1c54ea06cfd2f6b63219704de0b9b4f72dcc2b8fdef820be6cd799780e91e"
+dependencies = [
+ "serde",
+ "zeroize",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1863,3 +1874,9 @@ dependencies = [
  "cfg-if",
  "windows-sys",
 ]
+
+[[package]]
+name = "zeroize"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a0956f1ba7c7909bfb66c2e9e4124ab6f6482560f6628b5aaeba39207c9aad9"
