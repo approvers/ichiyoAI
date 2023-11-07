@@ -17,7 +17,7 @@ pub async fn reply_completion_result(
 pub fn format_result(result: ResponseCompletionResultModel, model: &str) -> String {
     let pricing = usage_pricing(result.input_token, result.output_token, model);
     format!(
-        "{}\n\n`利用料金: ￥{:.2}` - `合計トークン: {}` - `使用モデル: {}`",
-        result.response_message, pricing, result.total_token, model
+        "{}\n\n`{} / ¥{:.2} ({} tokens)`",
+        result.response_message, model, pricing, result.total_token
     )
 }
