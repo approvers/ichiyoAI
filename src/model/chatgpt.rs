@@ -26,11 +26,18 @@ const GPT3_5_JPY_PER_INPUT_TOKEN: u32 = (0.0015 * EXCHANGE_RATE * SCALE / 1000.0
 const GPT3_5_JPY_PER_OUTPUT_TOKEN: u32 = (0.002 * EXCHANGE_RATE * SCALE / 1000.0) as u32;
 const GPT4_JPY_PER_INPUT_TOKEN: u32 = (0.03 * EXCHANGE_RATE * SCALE / 1000.0) as u32;
 const GPT4_JPY_PER_OUTPUT_TOKEN: u32 = (0.06 * EXCHANGE_RATE * SCALE / 1000.0) as u32;
+const GPT4_TURBO_JPY_PER_INPUT_TOKEN: u32 = (0.01 * EXCHANGE_RATE * SCALE / 1000.0) as u32;
+const GPT4_TURBO_JPY_PER_OUTPUT_TOKEN: u32 = (0.03 * EXCHANGE_RATE * SCALE / 1000.0) as u32;
 
 pub fn usage_pricing(input_token: u32, output_token: u32, model: &str) -> f32 {
     let (input_rate, output_rate) = match model {
         "gpt-3.5-turbo" => (GPT3_5_JPY_PER_INPUT_TOKEN, GPT3_5_JPY_PER_OUTPUT_TOKEN),
         "gpt-4" => (GPT4_JPY_PER_INPUT_TOKEN, GPT4_JPY_PER_OUTPUT_TOKEN),
+        // NOTE: preview model. See also: https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
+        "gpt-4-1106-preview" => (
+            GPT4_TURBO_JPY_PER_INPUT_TOKEN,
+            GPT4_TURBO_JPY_PER_OUTPUT_TOKEN,
+        ),
         _ => panic!("Invalid model: {:?}", model),
     };
 
