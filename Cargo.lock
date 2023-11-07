@@ -620,7 +620,7 @@ dependencies = [
 
 [[package]]
 name = "ichiyo_ai"
-version = "1.15.4"
+version = "1.16.0"
 dependencies = [
  "anyhow",
  "async-openai",
