@@ -7,13 +7,13 @@ repository = "https://github.com/approvers/ichiyoAI"
 
 [dependencies]
 anyhow = { version = "1.0" }
-async-openai = "0.15.0"
+async-openai = "0.15"
 dotenvy = { version = "0.15" }
 once_cell = { version = "1.18" }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3" }
-envy = { version = "0.4.2" }
-typed-builder = { version = "0.18.0" }
+envy = { version = "0.4" }
+typed-builder = { version = "0.18" }
 
 [dependencies.serenity]
 version = "0.11"
@@ -21,9 +21,13 @@ features = ["client", "gateway", "model", "cache", "rustls_backend"]
 default-features = false
 
 [dependencies.serde]
-version = "1.0.190"
+version = "1.0"
 features = ["derive"]
 
 [dependencies.tokio]
 version = "1.33"
 features = ["macros", "rt-multi-thread", "time"]
+
+[dependencies.strum]
+version = "0.25"
+features = ["derive"]
