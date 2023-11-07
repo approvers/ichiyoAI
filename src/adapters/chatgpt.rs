@@ -5,6 +5,7 @@ use async_openai::types::CreateChatCompletionRequestArgs;
 use async_openai::Client;
 use std::time::Duration;
 use tokio::time::timeout;
+use tracing::debug;
 
 pub static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。";
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
@@ -26,6 +27,7 @@ pub async fn request_chatgpt_message(
     let response = timeout(TIMEOUT_DURATION, client.chat().create(client_request))
         .await
         .context("Timeout. Please try again.")??;
+    debug!("response: {:?}", response);
 
     let choice = response
         .choices
@@ -41,7 +43,6 @@ pub async fn request_chatgpt_message(
             )
         })
         .unwrap_or_default();
-
     Ok(ResponseCompletionResultModel::builder()
         .response_message(choice.message.content.clone().unwrap_or_default())
         .input_token(input_token)
