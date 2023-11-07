@@ -74,7 +74,9 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
         .await
         .unwrap_or(false);
     let model = if is_subscriber {
-        "gpt-4".to_string()
+        // NOTE: preview model. See also: https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
+        "gpt-4-1106-preview".to_string()
+        // "gpt-4".to_string()
     } else {
         "gpt-3.5-turbo".to_string()
     };
