@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.16.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.4...ichiyo_ai-v1.16.0) (2023-11-07)
+
+
+### Features
+
+* GPT-4 Turbo (gpt-4-1106-preview) のサポート ([#142](https://github.com/approvers/ichiyoAI/issues/142)) ([0cc7f5e](https://github.com/approvers/ichiyoAI/commit/0cc7f5ea23b5962cf01f75d179fb8ff71ad3dded))
+* Updated GPT 3.5 Turbo (gpt-3.5-turbo-1106) のサポート ([#143](https://github.com/approvers/ichiyoAI/issues/143)) ([40c5300](https://github.com/approvers/ichiyoAI/commit/40c53000e4c378ea935cfab229042cd44af88083))
+* デバックログの切り替えロジックを作成 ([#140](https://github.com/approvers/ichiyoAI/issues/140)) ([cfdecd1](https://github.com/approvers/ichiyoAI/commit/cfdecd19fdfaa226cc4ee563be081bcbc5afbc0f))
+* メッセージフォーマットの改善 ([#144](https://github.com/approvers/ichiyoAI/issues/144)) ([8567760](https://github.com/approvers/ichiyoAI/commit/8567760efb44496cd4b9ac2094cd511f56e8f797))
+
 ## [1.15.4](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.3...ichiyo_ai-v1.15.4) (2023-10-28)
 
 
