@@ -15,6 +15,7 @@ use serenity::model::id::{ChannelId, GuildId, RoleId};
 use serenity::model::prelude::Activity;
 use serenity::prelude::EventHandler;
 use std::sync::Arc;
+use tracing::debug;
 use tracing::log::{error, info};
 
 #[async_trait]
@@ -132,8 +133,7 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
     }
 
     replies.reverse();
-
-    info!("{:?}", replies.iter());
+    debug!("{:?}", replies.iter());
 
     let request = RequestMessageModel::builder()
         .replies(replies)
