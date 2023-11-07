@@ -78,7 +78,7 @@ async fn process_ichiyoai(ctx: Context, message: Message) -> anyhow::Result<()> 
         "gpt-4-1106-preview".to_string()
         // "gpt-4".to_string()
     } else {
-        "gpt-3.5-turbo".to_string()
+        "gpt-3.5-turbo-1106".to_string()
     };
     let mut replies: Vec<ChatCompletionRequestMessage> =
         vec![ChatCompletionRequestMessageArgs::default()
