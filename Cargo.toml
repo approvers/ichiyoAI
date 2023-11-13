@@ -7,7 +7,7 @@ repository = "https://github.com/approvers/ichiyoAI"
 
 [dependencies]
 anyhow = { version = "1.0" }
-async-openai = "0.15"
+async-openai = "0.16"
 dotenvy = { version = "0.15" }
 once_cell = { version = "1.18" }
 tracing = { version = "0.1" }
