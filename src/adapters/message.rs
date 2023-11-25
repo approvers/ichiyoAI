@@ -47,14 +47,12 @@ pub async fn push_referenced_msg_to_prompts(
                         .into(),
                 )
             }
-            Role::User => {
-                prompts.push(
-                    ChatCompletionRequestUserMessageArgs::default()
-                        .content(content)
-                        .build()?
-                        .into(),
-                )
-            }
+            Role::User => prompts.push(
+                ChatCompletionRequestUserMessageArgs::default()
+                    .content(content)
+                    .build()?
+                    .into(),
+            ),
             _ => {}
         }
 

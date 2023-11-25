@@ -68,18 +68,18 @@ impl EventHandler for EvHandler {
         };
 
         prompts.reverse();
-        let response = match request_chatgpt_response(&ctx, msg.channel_id.0, prompts, is_gpt4)
-            .await
-        {
-            Ok(response) => response,
-            Err(why) => {
-                let _ = msg
-                    .reply_ping(&ctx, format!("An error has occurred: {}", why))
-                    .await;
-                error!("Failed to request chatgpt response: {}", why);
-                return;
-            }
-        };
+
+        let response =
+            match request_chatgpt_response(&ctx, msg.channel_id.0, prompts, is_gpt4).await {
+                Ok(response) => response,
+                Err(why) => {
+                    let _ = msg
+                        .reply_ping(&ctx, format!("An error has occurred: {}", why))
+                        .await;
+                    error!("Failed to request chatgpt response: {}", why);
+                    return;
+                }
+            };
 
         reply_chatgpt_response(response, &ctx, &msg).await.unwrap();
     }

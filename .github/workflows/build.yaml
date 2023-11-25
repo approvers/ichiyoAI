@@ -18,8 +18,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
-      - name: Setup toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: mkroening/rust-toolchain-toml@main
 
       - name: Setup cache
         uses: Swatinem/rust-cache@v2
