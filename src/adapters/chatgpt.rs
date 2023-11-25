@@ -1,18 +1,15 @@
-use crate::model::chatgpt::ChatGPTResponseModel;
+use crate::{
+    adapters::{message::start_typing, TIMEOUT_DURATION},
+    model::chatgpt::ChatGPTResponseModel,
+};
 use anyhow::Context as _;
 use async_openai::{
     types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs},
     Client,
 };
-use serenity::{
-    client::Context,
-    http::{Http, Typing},
-};
-use std::{sync::Arc, time::Duration};
+use serenity::client::Context;
 use tokio::time::timeout;
 use tracing::info;
-
-static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 
 pub async fn request_chatgpt_response(
     ctx: &Context,
@@ -38,7 +35,7 @@ pub async fn request_chatgpt_response(
 
     let response = timeout(TIMEOUT_DURATION, client.chat().create(request))
         .await
-        .context("Opereation timed out")??;
+        .context("Operation timed out")??;
 
     info!("Response: {:?}", response.choices);
     let choice = response
@@ -64,8 +61,4 @@ pub async fn request_chatgpt_response(
         .completion_tokens(completion_tokens)
         .total_tokens(total_tokens)
         .build())
-}
-
-fn start_typing(http: Arc<Http>, channel_id: u64) -> Typing {
-    Typing::start(http, channel_id).expect("Failed to start typing")
 }
