@@ -1,12 +1,14 @@
+use anyhow::Context as _;
 use async_openai::{
     types::{CreateImageRequestArgs, Image, ImageModel, ImageSize, ResponseFormat},
     Client,
 };
 use serenity::client::Context;
+use tokio::time::timeout;
 
 use crate::model::dall_e::DaLLEResponseModel;
 
-use super::message::start_typing;
+use super::{message::start_typing, TIMEOUT_DURATION};
 
 pub async fn generate_dall_e_image(
     ctx: &Context,
@@ -33,7 +35,9 @@ pub async fn generate_dall_e_image(
         .user("ichiyoai-image-generation")
         .build()?;
 
-    let response = client.images().create(request).await?;
+    let response = timeout(TIMEOUT_DURATION, client.images().create(request))
+        .await
+        .context("Operation timed out")??;
 
     response.data.iter().for_each(|x| match &**x {
         Image::Url { url, .. } => {

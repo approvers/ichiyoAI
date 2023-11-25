@@ -2,7 +2,6 @@ use crate::model::dall_e::DaLLEResponseModel;
 use crate::model::embed::{EmbedMessage, EmbedMessageFooter, EmbedMessageImage};
 use serenity::{builder::CreateEmbed, utils::Colour};
 
-
 fn convert_embed(
     EmbedMessage {
         title,
@@ -85,7 +84,7 @@ pub fn build_davinci_embed(response: DaLLEResponseModel) -> anyhow::Result<Creat
     // TODO: remove when stable image generation
     let footer = EmbedMessageFooter::builder()
         .text(
-            "Image Generation機能は現在ベータ版です. 予期せぬ不具合が発生する可能性があります."
+            "Image Generation機能は現在ベータ版です.\n予期せぬ不具合が発生する可能性があります."
                 .to_string(),
         )
         .build();
