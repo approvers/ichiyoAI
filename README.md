@@ -7,9 +7,6 @@
 
 ichiyoAI は限界開発鯖で使用できるチャットAIです.
 
-> [!Important]
-> ichiyoAI は 2023/11/23 に開発を終了しました.
-
 ## Installation
 
 ```shell
