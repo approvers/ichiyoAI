@@ -1,39 +1,51 @@
-use crate::model::chatgpt::{RequestMessageModel, ResponseCompletionResultModel};
-use anyhow::Context;
-use async_openai::config::OpenAIConfig;
-use async_openai::types::CreateChatCompletionRequestArgs;
-use async_openai::Client;
-use std::time::Duration;
+use crate::model::chatgpt::ChatGPTResponseModel;
+use anyhow::Context as _;
+use async_openai::{
+    types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs},
+    Client,
+};
+use serenity::{
+    client::Context,
+    http::{Http, Typing},
+};
+use std::{sync::Arc, time::Duration};
 use tokio::time::timeout;
-use tracing::debug;
+use tracing::info;
 
-pub static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。";
 static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 
-async fn create_chatgpt_client() -> anyhow::Result<Client<OpenAIConfig>> {
-    Ok(Client::new())
-}
+pub async fn request_chatgpt_response(
+    ctx: &Context,
+    channel_id: u64,
+    prompts: Vec<ChatCompletionRequestMessage>,
+    is_gpt4: bool,
+) -> anyhow::Result<ChatGPTResponseModel> {
+    let typing = start_typing(ctx.http.clone(), channel_id);
 
-pub async fn request_chatgpt_message(
-    request: RequestMessageModel,
-) -> anyhow::Result<ResponseCompletionResultModel> {
-    let client = create_chatgpt_client().await?;
+    let client = Client::new();
+    let model = match is_gpt4 {
+        // notes: gpt-4-1106-preview is preview model
+        true => "gpt-4-1106-preview",
+        false => "gpt-3.5-turbo-1106",
+    };
 
-    let client_request = CreateChatCompletionRequestArgs::default()
-        .model(request.model)
-        .messages(request.replies)
+    info!("Request: {:?}", prompts);
+
+    let request = CreateChatCompletionRequestArgs::default()
+        .model(model)
+        .messages(prompts)
         .build()?;
 
-    let response = timeout(TIMEOUT_DURATION, client.chat().create(client_request))
+    let response = timeout(TIMEOUT_DURATION, client.chat().create(request))
         .await
-        .context("Timeout. Please try again.")??;
-    debug!("response: {:?}", response);
+        .context("Opereation timed out")??;
 
+    info!("Response: {:?}", response.choices);
     let choice = response
         .choices
         .get(0)
-        .context("No response message found.")?;
-    let (input_token, output_token, total_token) = response
+        .context("No response message found")?;
+    let (prompt_tokens, completion_tokens, total_tokens) = response
         .usage
         .map(|usage| {
             (
@@ -43,10 +55,17 @@ pub async fn request_chatgpt_message(
             )
         })
         .unwrap_or_default();
-    Ok(ResponseCompletionResultModel::builder()
-        .response_message(choice.message.content.clone().unwrap_or_default())
-        .input_token(input_token)
-        .output_token(output_token)
-        .total_token(total_token)
+
+    typing.stop();
+    Ok(ChatGPTResponseModel::builder()
+        .model(model.to_string())
+        .res(choice.message.content.clone().unwrap_or_default())
+        .prompt_tokens(prompt_tokens)
+        .completion_tokens(completion_tokens)
+        .total_tokens(total_tokens)
         .build())
+}
+
+fn start_typing(http: Arc<Http>, channel_id: u64) -> Typing {
+    Typing::start(http, channel_id).expect("Failed to start typing")
 }
