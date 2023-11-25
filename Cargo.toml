@@ -27,7 +27,3 @@ features = ["derive"]
 [dependencies.tokio]
 version = "1.34"
 features = ["macros", "rt-multi-thread", "time"]
-
-[dependencies.strum]
-version = "0.25"
-features = ["derive"]
