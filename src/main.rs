@@ -4,6 +4,7 @@ use dotenvy::dotenv;
 use event::EvHandler;
 use serenity::{model::gateway::GatewayIntents, Client};
 
+mod adapters;
 mod event;
 mod model;
 
