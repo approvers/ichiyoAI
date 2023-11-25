@@ -17,7 +17,7 @@ typed-builder = { version = "0.18" }
 
 [dependencies.serenity]
 version = "0.11"
-features = ["client", "gateway", "model", "cache", "rustls_backend"]
+features = ["client", "gateway", "model", "cache", "rustls_backend", "framework", "standard_framework"]
 default-features = false
 
 [dependencies.serde]

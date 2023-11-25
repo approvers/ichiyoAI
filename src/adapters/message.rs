@@ -1,14 +1,24 @@
+use std::sync::Arc;
+
 use anyhow::{Context as _, Ok};
 use async_openai::types::{
     ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestMessage,
     ChatCompletionRequestUserMessageArgs, Role,
 };
-use serenity::{client::Context, model::channel::Message};
+use serenity::{
+    client::Context,
+    http::{Http, Typing},
+    model::channel::Message,
+};
 
 use crate::{
     event::OWN_MENTION,
     model::chatgpt::{usage_pricing, ChatGPTResponseModel},
 };
+
+pub fn start_typing(http: Arc<Http>, channel_id: u64) -> Typing {
+    Typing::start(http, channel_id).expect("Failed to start typing")
+}
 
 pub async fn push_referenced_msg_to_prompts(
     prompts: &mut Vec<ChatCompletionRequestMessage>,
@@ -27,7 +37,7 @@ pub async fn push_referenced_msg_to_prompts(
             .await
             .context("Failed to get referenced message")?;
 
-        let role = if ref_msg.is_own(&ctx) {
+        let role = if ref_msg.is_own(ctx) {
             Role::Assistant
         } else {
             Role::User

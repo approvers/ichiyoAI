@@ -1,7 +1,7 @@
 use crate::model::dall_e::DaLLEResponseModel;
 use crate::model::embed::{EmbedMessage, EmbedMessageFooter, EmbedMessageImage};
 use serenity::{builder::CreateEmbed, utils::Colour};
-use tracing::info;
+
 
 fn convert_embed(
     EmbedMessage {

@@ -1,4 +1,4 @@
-use crate::model::chatgpt::ChatGPTResponseModel;
+use crate::{adapters::message::start_typing, model::chatgpt::ChatGPTResponseModel};
 use anyhow::Context as _;
 use async_openai::{
     types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs},
@@ -6,9 +6,8 @@ use async_openai::{
 };
 use serenity::{
     client::Context,
-    http::{Http, Typing},
 };
-use std::{sync::Arc, time::Duration};
+use std::{time::Duration};
 use tokio::time::timeout;
 use tracing::info;
 
@@ -64,8 +63,4 @@ pub async fn request_chatgpt_response(
         .completion_tokens(completion_tokens)
         .total_tokens(total_tokens)
         .build())
-}
-
-fn start_typing(http: Arc<Http>, channel_id: u64) -> Typing {
-    Typing::start(http, channel_id).expect("Failed to start typing")
 }

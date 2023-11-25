@@ -37,7 +37,7 @@ pub async fn generate_dall_e_image(
 
     response.data.iter().for_each(|x| match &**x {
         Image::Url { url, .. } => {
-            let _ = url.replace("!", "");
+            let _ = url.replace('!', "");
             image_url = url.to_string();
         }
         _ => {}

@@ -13,7 +13,7 @@ use crate::adapters::user::is_sponsor;
 async fn davinci(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let prompt = args.raw_quoted().collect::<String>();
 
-    let is_dalle4 = match is_sponsor(&ctx, msg.clone().author).await {
+    let is_dalle4 = match is_sponsor(ctx, msg.clone().author).await {
         Ok(is_gpt4) => is_gpt4,
         Err(why) => {
             error!("Failed to check sponsor: {}", why);
@@ -21,7 +21,7 @@ async fn davinci(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         }
     };
 
-    let response = match generate_dall_e_image(&ctx, msg.channel_id.0, prompt, is_dalle4).await {
+    let response = match generate_dall_e_image(ctx, msg.channel_id.0, prompt, is_dalle4).await {
         Ok(response) => response,
         Err(why) => {
             let _ = msg
