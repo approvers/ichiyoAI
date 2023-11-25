@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.16.0...ichiyo_ai-v1.17.0) (2023-11-25)
+
+
+### Features
+
+* async_openai v0.17.0 のサポート ([#148](https://github.com/approvers/ichiyoAI/issues/148)) ([b1b0b09](https://github.com/approvers/ichiyoAI/commit/b1b0b090993c3b99c0f7ddc4bb9b6a90d8e82f51))
+* ImageGeneration 機能のサポート ([#151](https://github.com/approvers/ichiyoAI/issues/151)) ([5f88fb9](https://github.com/approvers/ichiyoAI/commit/5f88fb9ef15ae26cfda3464d9aabfb478d2cd857))
+
 ## [1.16.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.15.4...ichiyo_ai-v1.16.0) (2023-11-07)
 
 
