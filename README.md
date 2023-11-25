@@ -29,14 +29,4 @@ docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
 | `DISCORD_API_TOKEN` | Discord API のトークン | `Yes`    | ---     |
 | `OPENAI_API_KEY`    | OpenAI API のトークン  | `Yes`    | ---     |
 | `GUILD_ID`          | 限界開発鯖の ID         | `Yes`    | ---     |
-| `TAXPAYER_ROLE_ID`  | 購読者ロールの ID        | `Yes`     | ---     |
-| `LOG_ENVIRONMENT` | ログの出力レベル切り替え. | `No` | `production` |
-
-### `LOG_ENVIRONMENT`
-
-環境変数 `LOG_ENVIRONMENT` はログの出力レベルを切り替えます.
-
-- `production`: 本番環境向け. ログレベル `INFO` 以上のログを出力します.
-- `development`: デバック環境向け. ログレベル `DEBUG` 以上のログを出力します.
-
-デフォルトでは `production` が設定されています. `development` に切り替えると, Serenity や ichiyoAI 本体のデバッグログが出力されます.
+| `SPONSOR_ROLE_ID`   | 購読者ロールの ID        | `Yes`     | ---     |
