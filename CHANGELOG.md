@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.17.0...ichiyo_ai-v1.18.0) (2023-11-26)
+
+
+### Features
+
+* 埋め込みの DALL-E のモデル名表示 ([#152](https://github.com/approvers/ichiyoAI/issues/152)) ([08bfe87](https://github.com/approvers/ichiyoAI/commit/08bfe87ab9e17b7cfc8b27b8f58175fb3e7ce985))
+
 ## [1.17.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.16.0...ichiyo_ai-v1.17.0) (2023-11-25)
 
 
