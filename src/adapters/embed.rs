@@ -1,5 +1,5 @@
 use crate::model::dall_e::DaLLEResponseModel;
-use crate::model::embed::{EmbedMessage, EmbedMessageFooter, EmbedMessageImage};
+use crate::model::embed::{EmbedMessage, EmbedMessageField, EmbedMessageImage};
 use serenity::{builder::CreateEmbed, utils::Colour};
 
 fn convert_embed(
@@ -81,22 +81,20 @@ fn convert_embed(
 }
 
 pub fn build_davinci_embed(response: DaLLEResponseModel) -> anyhow::Result<CreateEmbed> {
-    // TODO: remove when stable image generation
-    let footer = EmbedMessageFooter::builder()
-        .text(
-            "Image Generation機能は現在ベータ版です.\n予期せぬ不具合が発生する可能性があります."
-                .to_string(),
-        )
+    let model_field = EmbedMessageField::builder()
+        .name("Model".to_string())
+        .value(response.model)
         .build();
     let image = EmbedMessageImage::builder()
-        .url(Some(response.res_image_url))
+        .url(Some(response.res_image_url.clone()))
         .build();
 
     let embed = EmbedMessage::builder()
         .title(Some("生成結果".to_string()))
+        .url(Some(response.res_image_url))
         .description(Some(response.prompt))
         .image(Some(image))
-        .footer(Some(footer))
+        .fields(Some(vec![model_field]))
         .build();
     Ok(convert_embed(embed))
 }
