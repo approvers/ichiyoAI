@@ -3,7 +3,7 @@ use async_openai::{
     types::{CreateImageRequestArgs, Image, ImageModel, ImageSize, ResponseFormat},
     Client,
 };
-use serenity::client::Context;
+use serenity::{all::ChannelId, client::Context};
 use tokio::time::timeout;
 
 use crate::model::dall_e::DaLLEResponseModel;
@@ -12,7 +12,7 @@ use super::{message::start_typing, TIMEOUT_DURATION};
 
 pub async fn generate_dall_e_image(
     ctx: &Context,
-    channel_id: u64,
+    channel_id: ChannelId,
     prompt: String,
     is_dell4: bool,
 ) -> anyhow::Result<DaLLEResponseModel> {

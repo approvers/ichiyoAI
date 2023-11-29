@@ -7,13 +7,13 @@ use async_openai::{
     types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs},
     Client,
 };
-use serenity::client::Context;
+use serenity::{all::ChannelId, client::Context};
 use tokio::time::timeout;
 use tracing::info;
 
 pub async fn request_chatgpt_response(
     ctx: &Context,
-    channel_id: u64,
+    channel_id: ChannelId,
     prompts: Vec<ChatCompletionRequestMessage>,
     is_gpt4: bool,
 ) -> anyhow::Result<ChatGPTResponseModel> {
