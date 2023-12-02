@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.18.0...ichiyo_ai-v1.19.0) (2023-12-02)
+
+
+### Features
+
+* support serenity v0.12 ([#155](https://github.com/approvers/ichiyoAI/issues/155)) ([257c375](https://github.com/approvers/ichiyoAI/commit/257c375e2059cfff44638825a5a540c7426b6cd4))
+
 ## [1.18.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.17.0...ichiyo_ai-v1.18.0) (2023-11-26)
 
 
