@@ -6,6 +6,7 @@ use async_openai::types::{
     ChatCompletionRequestUserMessageArgs, Role,
 };
 use serenity::{
+    all::ChannelId,
     client::Context,
     http::{Http, Typing},
     model::channel::Message,
@@ -16,8 +17,8 @@ use crate::{
     model::chatgpt::{usage_pricing, ChatGPTResponseModel},
 };
 
-pub fn start_typing(http: Arc<Http>, channel_id: u64) -> Typing {
-    Typing::start(http, channel_id).expect("Failed to start typing")
+pub fn start_typing(http: Arc<Http>, channel_id: ChannelId) -> Typing {
+    Typing::start(http, channel_id)
 }
 
 pub async fn push_referenced_msg_to_prompts(
@@ -25,7 +26,7 @@ pub async fn push_referenced_msg_to_prompts(
     ctx: &Context,
     msg: &Message,
 ) -> anyhow::Result<()> {
-    let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user_id()));
+    let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user().id));
     let channel_id = msg.channel_id;
     let mut target_message_id = msg.referenced_message.as_ref().map(|m| m.id);
 
@@ -33,7 +34,7 @@ pub async fn push_referenced_msg_to_prompts(
         let ref_msg = ctx
             .http
             .clone()
-            .get_message(channel_id.0, message_id.0)
+            .get_message(channel_id, message_id)
             .await
             .context("Failed to get referenced message")?;
 

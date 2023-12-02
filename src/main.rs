@@ -3,7 +3,10 @@ use anyhow::Context;
 use dotenvy::dotenv;
 use event::EvHandler;
 use serenity::{
-    framework::{standard::macros::group, StandardFramework},
+    framework::{
+        standard::{macros::group, Configuration},
+        StandardFramework,
+    },
     model::gateway::GatewayIntents,
     Client,
 };
@@ -28,9 +31,8 @@ async fn main() -> anyhow::Result<()> {
         .set(envy::from_env::<IchiyoAiEnv>().expect("Failed to load enviroment variables"))
         .unwrap();
 
-    let framework = StandardFramework::new()
-        .configure(|f| f.prefix("!"))
-        .group(&FEATURES_GROUP);
+    let framework = StandardFramework::new().group(&FEATURES_GROUP);
+    framework.configure(Configuration::new().prefix("!"));
 
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
     let mut client = Client::builder(&ICHIYOAI_ENV.get().unwrap().discord_api_token, intents)
