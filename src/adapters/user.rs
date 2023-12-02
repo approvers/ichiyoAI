@@ -13,8 +13,8 @@ pub async fn is_sponsor(ctx: &Context, msg_author: User) -> anyhow::Result<bool>
     msg_author
         .has_role(
             &ctx,
-            GuildId(ICHIYOAI_ENV.get().unwrap().guild_id),
-            RoleId(ICHIYOAI_ENV.get().unwrap().sponsor_role_id),
+            GuildId::new(ICHIYOAI_ENV.get().unwrap().guild_id),
+            RoleId::new(ICHIYOAI_ENV.get().unwrap().sponsor_role_id),
         )
         .await
         .context("Failed to get sponsor role")

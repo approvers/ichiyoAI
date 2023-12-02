@@ -1,3 +1,4 @@
+use serenity::builder::{CreateAllowedMentions, CreateMessage};
 use serenity::client::Context;
 use serenity::framework::standard::macros::command;
 use serenity::framework::standard::{Args, CommandResult};
@@ -21,7 +22,7 @@ async fn davinci(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         }
     };
 
-    let response = match generate_dall_e_image(ctx, msg.channel_id.0, prompt, is_dalle4).await {
+    let response = match generate_dall_e_image(ctx, msg.channel_id, prompt, is_dalle4).await {
         Ok(response) => response,
         Err(why) => {
             let _ = msg
@@ -33,16 +34,13 @@ async fn davinci(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     };
 
     let embed = build_davinci_embed(response).expect("Failed to build embed.");
+    let message = CreateMessage::default()
+        .reference_message(msg)
+        .allowed_mentions(CreateAllowedMentions::default().replied_user(true))
+        .embed(embed);
 
     msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.reference_message(msg);
-            m.allowed_mentions(|mention| {
-                mention.replied_user(true);
-                mention
-            });
-            m.set_embed(embed)
-        })
+        .send_message(&ctx.http, message)
         .await
         .expect("Failed to send message.");
 

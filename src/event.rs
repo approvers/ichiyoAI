@@ -3,7 +3,8 @@ use once_cell::sync::OnceCell;
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
-    model::{channel::Message, gateway::Activity},
+    gateway::ActivityData,
+    model::channel::Message,
     model::{channel::MessageType, gateway::Ready},
 };
 use std::result::Result::Ok;
@@ -31,7 +32,7 @@ impl EventHandler for EvHandler {
             return;
         }
 
-        let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user_id()));
+        let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user().id));
         let content = msg.content.replace(mention, "");
         let mut prompts: Vec<ChatCompletionRequestMessage> =
             vec![ChatCompletionRequestUserMessageArgs::default()
@@ -69,17 +70,17 @@ impl EventHandler for EvHandler {
 
         prompts.reverse();
 
-        let response =
-            match request_chatgpt_response(&ctx, msg.channel_id.0, prompts, is_gpt4).await {
-                Ok(response) => response,
-                Err(why) => {
-                    let _ = msg
-                        .reply_ping(&ctx, format!("An error has occurred: {}", why))
-                        .await;
-                    error!("Failed to request chatgpt response: {}", why);
-                    return;
-                }
-            };
+        let response = match request_chatgpt_response(&ctx, msg.channel_id, prompts, is_gpt4).await
+        {
+            Ok(response) => response,
+            Err(why) => {
+                let _ = msg
+                    .reply_ping(&ctx, format!("An error has occurred: {}", why))
+                    .await;
+                error!("Failed to request chatgpt response: {}", why);
+                return;
+            }
+        };
 
         reply_chatgpt_response(response, &ctx, &msg).await.unwrap();
     }
@@ -88,8 +89,7 @@ impl EventHandler for EvHandler {
         info!("Starting...");
 
         let version = env!("CARGO_PKG_VERSION");
-        ctx.set_activity(Activity::playing(&format!("v{}", version)))
-            .await;
+        ctx.set_activity(Some(ActivityData::playing(&format!("v{}", version))));
 
         info!("Running ichiyoAI v{}", version);
         info!(
