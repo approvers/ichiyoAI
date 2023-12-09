@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.19.0...ichiyo_ai-v1.19.1) (2023-12-09)
+
+
+### Bug Fixes
+
+* メンションを正しく取り除かれない不具合の修正 ([#158](https://github.com/approvers/ichiyoAI/issues/158)) ([63b844c](https://github.com/approvers/ichiyoAI/commit/63b844c88627200192275fbd730d8d7da001ac35))
+
 ## [1.19.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.18.0...ichiyo_ai-v1.19.0) (2023-12-02)
 
 
