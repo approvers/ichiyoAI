@@ -32,7 +32,7 @@ impl EventHandler for EvHandler {
             return;
         }
 
-        let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user().id));
+        let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user().id));
         let content = msg.content.replace(mention, "");
         let mut prompts: Vec<ChatCompletionRequestMessage> =
             vec![ChatCompletionRequestUserMessageArgs::default()
@@ -40,6 +40,8 @@ impl EventHandler for EvHandler {
                 .build()
                 .unwrap()
                 .into()];
+
+        println!("content: {}", content);
 
         if content.chars().count() == 0 {
             return;
