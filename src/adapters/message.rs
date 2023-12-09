@@ -26,7 +26,7 @@ pub async fn push_referenced_msg_to_prompts(
     ctx: &Context,
     msg: &Message,
 ) -> anyhow::Result<()> {
-    let mention = OWN_MENTION.get_or_init(|| format!("<@!{}>", ctx.cache.current_user().id));
+    let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user().id));
     let channel_id = msg.channel_id;
     let mut target_message_id = msg.referenced_message.as_ref().map(|m| m.id);
 
