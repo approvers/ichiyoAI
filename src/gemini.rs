@@ -69,7 +69,7 @@ impl super::Completion for Gemini {
                 anyhow::bail!("unexpected part: {:?}", part);
             };
 
-            (*text).to_owned()
+            text.clone().into_owned()
         };
 
         let contents = messages
@@ -116,7 +116,8 @@ enum Content<'a> {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 enum Part<'a> {
-    Text(&'a str),
+    // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
+    Text(alloc::borrow::Cow<'a, str>),
     // InlineData(Blob),
     // FunctionCall(FunctionCall),
     // FunctionResponse(FunctionResponse),
@@ -126,10 +127,10 @@ impl<'a, I> From<&'a super::Message<I>> for Content<'a> {
     fn from(message: &'a super::Message<I>) -> Self {
         match message {
             super::Message::User { content, .. } => Self::User {
-                parts: vec![Part::Text(content)],
+                parts: vec![Part::Text(content.into())],
             },
             super::Message::Model { content, .. } => Self::Model {
-                parts: vec![Part::Text(content)],
+                parts: vec![Part::Text(content.into())],
             },
         }
     }

@@ -1,3 +1,4 @@
+extern crate alloc;
 use core::future::Future;
 
 pub enum Message<I> {

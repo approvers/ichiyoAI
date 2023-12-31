@@ -75,15 +75,25 @@ struct Request<'a> {
 #[serde(tag = "role")]
 #[serde(rename_all = "lowercase")]
 enum Message<'a> {
-    User { content: &'a str },
-    Assistant { content: &'a str },
+    User {
+        // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
+        content: alloc::borrow::Cow<'a, str>,
+    },
+    Assistant {
+        // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
+        content: alloc::borrow::Cow<'a, str>,
+    },
 }
 
 impl<'a, I> From<&'a super::Message<I>> for Message<'a> {
     fn from(message: &'a super::Message<I>) -> Self {
         match message {
-            super::Message::User { content, .. } => Self::User { content },
-            super::Message::Model { content, .. } => Self::Assistant { content },
+            super::Message::User { content, .. } => Self::User {
+                content: content.into(),
+            },
+            super::Message::Model { content, .. } => Self::Assistant {
+                content: content.into(),
+            },
         }
     }
 }
