@@ -1,21 +1,49 @@
 // ref: https://platform.openai.com/docs/api-reference/chat
 const ENDPOINT: &str = "https://api.openai.com/v1/chat/completions";
 
-pub struct Gpt4 {
+pub struct OpenAi<Model> {
     http: reqwest::Client,
     token: String,
+    model: core::marker::PhantomData<Model>,
 }
 
-impl Gpt4 {
+trait Model: for<'de> serde::de::Deserialize<'de> {
+    fn name() -> &'static str;
+}
+
+macro_rules! define_model {
+    ($vis:vis $name:ident : $model:expr) => {
+        $vis struct $name;
+
+        impl Model for $name {
+            fn name() -> &'static str {
+                $model
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $name {
+            fn deserialize<D: serde::de::Deserializer<'de>>(_: D) -> Result<Self, D::Error> {
+                unreachable!()
+            }
+        }
+    };
+}
+
+define_model!(pub GPT4Turbo: "gpt-4-1106-preview");
+define_model!(pub GPT35Turbo: "gpt3.5-turbo-1106");
+
+#[allow(private_bounds)]
+impl<Model: self::Model> OpenAi<Model> {
     pub fn new(token: impl AsRef<str>) -> Self {
         Self {
             http: reqwest::Client::new(),
             token: token.as_ref().to_owned(),
+            model: core::marker::PhantomData,
         }
     }
 }
 
-impl super::Completion for Gpt4 {
+impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
     type Metadata = Metadata;
 
     async fn next<I: Send + Sync>(
@@ -23,7 +51,7 @@ impl super::Completion for Gpt4 {
         messages: &[super::Message<I>],
     ) -> anyhow::Result<(super::Message<()>, Self::Metadata)> {
         let req = Request {
-            model: "gpt-4-1106-preview",
+            model: Model::name(),
             messages: messages.iter().map(Into::into).collect(),
         };
 
@@ -42,7 +70,7 @@ impl super::Completion for Gpt4 {
         }
 
         let res = res.bytes().await?;
-        let res = serde_json::from_slice::<Response>(&res)?;
+        let res = serde_json::from_slice::<Response<Model>>(&res)?;
 
         let [choice] = &res.choices[..] else {
             anyhow::bail!("unexpected number of choices: {}", res.choices.len());
@@ -99,13 +127,14 @@ impl<'a, I> From<&'a super::Message<I>> for Message<'a> {
 }
 
 #[derive(serde::Deserialize)]
-struct Response<'a> {
+struct Response<'a, Model: self::Model> {
     // id: &'a str,
     #[serde(borrow)]
     choices: Vec<Choice<'a>>,
     // created: Timestamp,
     #[allow(unused)]
-    model: ModelName,
+    #[serde(with = "ModelName")]
+    model: ModelName<Model>,
     // system_fingertprint: &'a str,
     #[allow(unused)]
     object: Object,
@@ -169,19 +198,19 @@ struct Usage {
 }
 
 macro_rules! tag_struct {
-    ($name:ident is $tag:literal expects $expect:literal) => {
-        struct $name;
+    ($name:ident $(<$ty:ident : $bound:path>)? is $tag:expr, expects $expect:expr) => {
+        struct $name$(<$ty : $bound>(core::marker::PhantomData<$ty>))?;
 
-        impl<'de> ::serde::de::Deserialize<'de> for $name {
+        impl<'de, $($ty: $bound)?> serde::de::Deserialize<'de> for $name<$($ty)?> {
             fn deserialize<D: serde::de::Deserializer<'de>>(
                 deserializer: D,
             ) -> Result<Self, D::Error> {
-                deserializer.deserialize_str(Self)
+                deserializer.deserialize_str(Self$((core::marker::PhantomData::<$ty>))?)
             }
         }
 
-        impl serde::de::Visitor<'_> for $name {
-            type Value = $name;
+        impl <'de, $($ty: $bound)?> serde::de::Visitor<'de> for $name<$($ty)?> {
+            type Value = Self;
 
             fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 formatter.write_str($expect)
@@ -189,7 +218,7 @@ macro_rules! tag_struct {
 
             fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
                 if value == $tag {
-                    Ok($name)
+                    Ok(Self$((core::marker::PhantomData::<$ty>))?)
                 } else {
                     Err(E::custom(format!("unknown value: {}", value)))
                 }
@@ -198,5 +227,5 @@ macro_rules! tag_struct {
     };
 }
 
-tag_struct!(ModelName is "gpt-4-1106-preview" expects "a model name");
-tag_struct!(Object is "chat.completion" expects "a object name");
+tag_struct!(ModelName<Model: self::Model> is Model::name(), expects "a model name");
+tag_struct!(Object is "chat.completion", expects "a object name");

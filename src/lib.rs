@@ -32,7 +32,8 @@ pub trait Completion {
 }
 
 mod gemini;
-mod gpt4;
+mod openai;
 
 pub use gemini::Gemini;
-pub use gpt4::Gpt4;
+pub type OpenAiGPT4Turbo = openai::OpenAi<openai::GPT4Turbo>;
+pub type OpenAiGPT35Turbo = openai::OpenAi<openai::GPT35Turbo>;
