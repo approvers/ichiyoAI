@@ -1,7 +1,4 @@
 // ref: https://ai.google.dev/api/rest/v1beta/models/generateContent
-const ENDPOINT: &str =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
-
 pub struct Gemini {
     http: reqwest::Client,
     token: String,
@@ -16,10 +13,6 @@ impl Gemini {
     }
 }
 
-#[allow(clippy::declare_interior_mutable_const)]
-const X_GOOG_API_KEY: reqwest::header::HeaderName =
-    reqwest::header::HeaderName::from_static("x-goog-api-key");
-
 impl super::Completion for Gemini {
     type Metadata = Metadata;
 
@@ -33,8 +26,8 @@ impl super::Completion for Gemini {
 
         let res = self
             .http
-            .post(ENDPOINT)
-            .header(X_GOOG_API_KEY, &self.token)
+            .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent")
+            .header(reqwest::header::HeaderName::from_static("x-goog-api-key"), &self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .body(reqwest::Body::from(serde_json::to_vec(&req)?))
             .send()
@@ -229,7 +222,7 @@ async fn count_tokens(
 
     let res = client
         .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens")
-        .header(X_GOOG_API_KEY, token)
+        .header(reqwest::header::HeaderName::from_static("x-goog-api-key"), token)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(reqwest::Body::from(serde_json::to_vec(&Request {
             contents,

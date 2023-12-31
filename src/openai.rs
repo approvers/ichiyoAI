@@ -1,6 +1,4 @@
 // ref: https://platform.openai.com/docs/api-reference/chat
-const ENDPOINT: &str = "https://api.openai.com/v1/chat/completions";
-
 pub struct OpenAi<Model> {
     http: reqwest::Client,
     token: String,
@@ -57,7 +55,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
 
         let res = self
             .http
-            .post(ENDPOINT)
+            .post("https://api.openai.com/v1/chat/completions")
             .bearer_auth(&self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .body(reqwest::Body::from(serde_json::to_vec(&req)?))
