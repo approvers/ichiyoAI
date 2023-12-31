@@ -103,14 +103,8 @@ struct Request<'a> {
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "role")]
 enum Content<'a> {
-    User {
-        #[serde(borrow)]
-        parts: Vec<Part<'a>>,
-    },
-    Model {
-        #[serde(borrow)]
-        parts: Vec<Part<'a>>,
-    },
+    User { parts: Vec<Part<'a>> },
+    Model { parts: Vec<Part<'a>> },
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -148,7 +142,6 @@ struct Response<'a> {
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Candidate<'a> {
-    #[serde(borrow)]
     content: Content<'a>,
     finish_reason: FinishReason,
     // safety_ratings: Vec<SafetyRating>,
