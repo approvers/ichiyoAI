@@ -30,7 +30,7 @@ macro_rules! define_model {
 }
 
 define_model!(pub GPT4Turbo: "gpt-4-1106-preview");
-define_model!(pub GPT35Turbo: "gpt3.5-turbo-1106");
+define_model!(pub GPT35Turbo: "gpt-3.5-turbo-1106");
 
 #[allow(private_bounds)]
 impl<Model: self::Model> OpenAi<Model> {
