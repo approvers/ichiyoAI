@@ -138,9 +138,10 @@ impl<'a, I> From<&'a super::Message<I>> for Content<'a> {
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Response<'a> {
+    // FACT: supported only `1`
     #[serde(borrow)]
-    candidates: [Candidate<'a>; 1], // FACT: supported only `1`
-                                    // prompt_feedback: PromptFeedback,
+    candidates: [Candidate<'a>; 1],
+    // prompt_feedback: PromptFeedback,
 }
 
 #[derive(serde::Deserialize)]
@@ -151,7 +152,8 @@ struct Candidate<'a> {
     finish_reason: FinishReason,
     // safety_ratings: Vec<SafetyRating>,
     // citation_metadata: CitationMetadata,
-    // token_count: usize, // FACT: doesn't exist in a response
+    // // FACT: doesn't exist in a response
+    // token_count: usize,
     // grounding_attributions: Vec<GroundingAttribution>,
     // index: usize,
 }
