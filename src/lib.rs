@@ -33,3 +33,6 @@ pub trait Completion {
 
 mod gemini;
 mod gpt4;
+
+pub use gemini::Gemini;
+pub use gpt4::Gpt4;
