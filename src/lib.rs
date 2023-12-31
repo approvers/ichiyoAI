@@ -5,6 +5,22 @@ pub enum Message<I> {
     Model { id: I, content: String },
 }
 
+impl<I> Message<I> {
+    pub fn id(&self) -> &I {
+        match self {
+            Self::User { id, .. } => id,
+            Self::Model { id, .. } => id,
+        }
+    }
+
+    pub fn content(&self) -> &str {
+        match self {
+            Self::User { content, .. } => content,
+            Self::Model { content, .. } => content,
+        }
+    }
+}
+
 pub trait Completion {
     type Metadata;
 
