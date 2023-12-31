@@ -1,0 +1,346 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>モデル - ichiyoAI Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">はじめに</a></li><li class="chapter-item expanded affix "><li class="part-title">How to</li><li class="chapter-item expanded "><a href="how-to/text-generation.html"><strong aria-hidden="true">1.</strong> Text Generation</a></li><li class="chapter-item expanded "><a href="how-to/image-generation.html"><strong aria-hidden="true">2.</strong> Image Generation</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><a href="model.html" class="active">モデル</a></li><li class="chapter-item expanded affix "><a href="premium-access.html">プレミアムアクセス</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">ichiyoAI Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/approvers/ichiyoAI" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/approvers/ichiyoAI/edit/main/docs/src/model.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="モデル"><a class="header" href="#モデル">モデル</a></h1>
+<p>ichiyoAI は現在 ChatGPT, Gemini, DALL-E に対応しています.</p>
+<ul>
+<li><a href="#llm-%E5%A4%A7%E8%A6%8F%E6%A8%A1%E8%A8%80%E8%AA%9E%E3%83%A2%E3%83%87%E3%83%AB">LLM (大規模言語モデル)</a>
+<ul>
+<li><a href="#chatgpt">ChatGPT</a>
+<ul>
+<li><a href="#gpt-4">GPT-4</a></li>
+<li><a href="#gpt-35">GPT-3.5</a></li>
+</ul>
+</li>
+<li><a href="#gemini">Gemini</a></li>
+</ul>
+</li>
+<li><a href="#%E6%B7%B1%E5%B1%A4%E5%AD%A6%E7%BF%92%E3%83%A2%E3%83%87%E3%83%AB">深層学習モデル</a>
+<ul>
+<li><a href="#dall-e">DALL-E</a></li>
+</ul>
+</li>
+<li><a href="#%E3%83%91%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%B3%E3%82%B9%E6%AF%94%E8%BC%83">パフォーマンス比較</a>
+<ul>
+<li><a href="#gemini-ultra-vs-gpt-4-v">Gemini Ultra vs. GPT-4 (V)</a></li>
+<li><a href="#gemini-pro-vs-gpt-35">Gemini Pro vs. GPT-3.5</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="llm-大規模言語モデル"><a class="header" href="#llm-大規模言語モデル">LLM (大規模言語モデル)</a></h2>
+<blockquote>
+<p>大規模言語モデルは、信憑性、理解度、範囲の全てにおいて限界があり、人間の監視が必要です。
+— <em>マイケル・オズボーン、オックスフォード大学機械学習教授 2023年1月25日</em></p>
+</blockquote>
+<p>LLMとは、人工ニューラルネットワークを使って文章やソースコードを生成する生成的モデル.</p>
+<p>多数のパラメータ (数千万〜) を持つ人工ニュートラルネットワークを訓練することで, 人間のような文章を生成することができます.</p>
+<h3 id="chatgpt"><a class="header" href="#chatgpt">ChatGPT</a></h3>
+<p><strong>OpenAI</strong> が開発するチャットボット (非対話型人工知能.)</p>
+<h4 id="gpt-4"><a class="header" href="#gpt-4">GPT-4</a></h4>
+<p>GPT-3.5 を改良し, 自然言語やコードを理解・生成できる言語モデル. GPT-3.5 の <strong>完全上位互換</strong> .</p>
+<p><strong>アクセスには限界税への納税が必要です.</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>モデル名</th><th>ichiyoAI の対応バージョン</th><th>Context Window</th><th>トレーニングデータ</th><th>Input</th><th>Output</th></tr></thead><tbody>
+<tr><td>gpt-4-1106-preview</td><td><code>v1.16.0</code> 〜</td><td>128,000 Token</td><td>Apr 2023</td><td>$0.01 / 1k</td><td>$0.03 / 1k</td></tr>
+<tr><td>gpt-4-vision-preview</td><td>未対応(<code>*</code>)</td><td>128,000 Token</td><td>Apr 2023</td><td>$0.01 / 1k</td><td>$0.03 / 1k</td></tr>
+<tr><td>gpt-4 (Current: gpt-4-0613)</td><td><code>v1.5.0</code> 〜 <code>v1.15.4</code></td><td>8.192 Token</td><td>Sep 2021</td><td>$0.03 / 1k</td><td>$0.06 / 1k</td></tr>
+<tr><td>gpt-4-32k</td><td>未対応(<code>*</code>)</td><td>32,768 Token</td><td>Sep 2021</td><td>$0.03 / 1k</td><td>$0.06 / 1k</td></tr>
+</tbody></table>
+</div>
+<p><code>*</code>: 対応予定なしのモデルです.</p>
+<h4 id="gpt-35"><a class="header" href="#gpt-35">GPT-3.5</a></h4>
+<p>GPT-3 を改良し, 自然言語やコードを理解・生成できる言語モデル.</p>
+<div class="table-wrapper"><table><thead><tr><th>モデル名</th><th>ichiyoAI の対応バージョン</th><th>Context Window</th><th>トレーニングデータ</th><th>Input</th><th>Output</th></tr></thead><tbody>
+<tr><td>gpt-3.5-turbo-1106</td><td><code>v1.16.0</code> 〜</td><td>16,385 Token</td><td>Sep 2021</td><td>$0.0010 / 1k</td><td>$0.0020 / 1k</td></tr>
+<tr><td>gpt-3.5-turbo (Current: gpt-3.5-turbo-0613)</td><td>〜 <code>v1.15.4</code></td><td>4,096 Token</td><td>Sep 2021</td><td>$0.0015 / 1k</td><td>$0.002 / 1k</td></tr>
+</tbody></table>
+</div>
+<h3 id="gemini"><a class="header" href="#gemini">Gemini</a></h3>
+<p>Google が2014年に買収したイギリスにある Alphabet の人工知能子会社 <strong>DeepMind Technologies</strong> が開発したマルチモーダル大規模言語モデル.</p>
+<p>LaMDA, PaLM2 の後継として供し, Gemini Ultra, Gemini Pro, Gemini Nano からなり, <a href="#gpt-4">GPT-4</a> のライバルとして位置づけられている.</p>
+<ul>
+<li>Gemini Ultra は GPT-4, Gemini Pro は GPT-3.5 がライバルとしてそれぞれ位置づけられています.</li>
+</ul>
+<div class="table-wrapper"><table><thead><tr><th>モデル名</th><th>ichiyoAI の対応バージョン</th><th>Input</th><th>Output</th><th>Price</th></tr></thead><tbody>
+<tr><td>Gemini Pro</td><td><code>v2.0.0</code> 〜</td><td>Text</td><td>Text</td><td>Free</td></tr>
+<tr><td>Gemini Pro Vision</td><td>未対応(<code>*</code>)</td><td>Text and Image</td><td>Text</td><td>Free</td></tr>
+</tbody></table>
+</div>
+<ul>
+<li>Gemini Ultra, Gemini Nano は Preview access 状態のため, ichiyoAI は未対応です.
+<ul>
+<li>利用できるようになり次第対応予定です.</li>
+</ul>
+</li>
+<li>PaLM や Embedding, Retrieval への対応は予定されていません.</li>
+<li><code>*</code>: 対応予定なしのモデルです.</li>
+</ul>
+<h2 id="深層学習モデル"><a class="header" href="#深層学習モデル">深層学習モデル</a></h2>
+<blockquote>
+<p>ディープラーニング（英: deep learning）または深層学習（しんそうがくしゅう）とは、対象の全体像から細部までの各々の粒度の概念を階層構造として関連させて学習する手法のことである</p>
+</blockquote>
+<h3 id="dall-e"><a class="header" href="#dall-e">DALL-E</a></h3>
+<p><strong>OpenAI</strong> が開発する画像生成モデル.</p>
+<p><code>prompts</code> と呼ばれる自然言語の記述からデジタル画像を生成することができます.</p>
+<p><strong>DALL-E 3 のアクセスには限界税への納税が必要です.</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>モデル名</th><th>ichiyoAI の対応バージョン</th><th>Price (1024×1024)</th></tr></thead><tbody>
+<tr><td>dall-e-3</td><td><code>v1.17.0</code> 〜</td><td>$0.040 / image</td></tr>
+<tr><td>dall-e-2</td><td><code>v1.17.0</code> 〜</td><td>$0.020 / image</td></tr>
+</tbody></table>
+</div>
+<h2 id="パフォーマンス比較"><a class="header" href="#パフォーマンス比較">パフォーマンス比較</a></h2>
+<p>以下の Performance benchmarks は Google AI for Developers から引用しています.</p>
+<h3 id="gemini-ultra-vs-gpt-4-v"><a class="header" href="#gemini-ultra-vs-gpt-4-v">Gemini Ultra vs. GPT-4 (V)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>能力</th><th>ベンチマーク</th><th>Gemini Ultra</th><th>GPT-4 (V)</th></tr></thead><tbody>
+<tr><td>全般</td><td><strong>MMLU</strong> 57科目 (STEM, 人文科学など) の代表質問</td><td><strong>90.0 %</strong></td><td>86.4 %</td></tr>
+<tr><td>推論</td><td><strong>Big-Bench Hard</strong> 多段階の推論を必要とする難易度の高い多様なタスク</td><td><strong>83.6 %</strong></td><td>83.1 %</td></tr>
+<tr><td>推論</td><td><strong>DROP</strong> 読解力</td><td><strong>82.4</strong></td><td>80.9</td></tr>
+<tr><td>推論</td><td><strong>HellaSwag</strong> 日常業務における常識的な推論</td><td>87.8 %</td><td><strong>95.3 %</strong></td></tr>
+<tr><td>数学</td><td><strong>GSM8K</strong> 基本的な算数 (小学生の算数問題)</td><td><strong>94.4 %</strong></td><td>92.0 %</td></tr>
+<tr><td>数学</td><td><strong>MATH</strong> 難易度の高い数学問題 (代数, 幾何, 微積分)</td><td><strong>53.2 %</strong></td><td>52.9 %</td></tr>
+<tr><td>コード</td><td><strong>HumanEval</strong> Python コードの生成</td><td><strong>74.4 %</strong></td><td>67.0 %</td></tr>
+<tr><td>コード</td><td><strong>Natural2Code</strong> Python コードの生成. HumanEval のような新しいデータセット.</td><td><strong>74.9 %</strong></td><td>73.9 %</td></tr>
+</tbody></table>
+</div>
+<h3 id="gemini-pro-vs-gpt-35"><a class="header" href="#gemini-pro-vs-gpt-35">Gemini Pro vs. GPT-3.5</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>能力</th><th>ベンチマーク</th><th>Gemini Ultra</th><th>GPT-4 (V)</th></tr></thead><tbody>
+<tr><td>全般</td><td><strong>MMLU</strong> 57科目 (STEM, 人文科学など) の代表質問</td><td><strong>79.1 %</strong></td><td>70.0 %</td></tr>
+<tr><td>推論</td><td><strong>Big-Bench Hard</strong> 多段階の推論を必要とする難易度の高い多様なタスク</td><td><strong>75.0 %</strong></td><td>66.6 %</td></tr>
+<tr><td>推論</td><td><strong>DROP</strong> 読解力</td><td><strong>74.1</strong></td><td>64.1</td></tr>
+<tr><td>推論</td><td><strong>HellaSwag</strong> 日常業務における常識的な推論</td><td>84.7 %</td><td><strong>85.5 %</strong></td></tr>
+<tr><td>数学</td><td><strong>GSM8K</strong> 基本的な算数 (小学生の算数問題)</td><td><strong>86.5 %</strong></td><td>57.1 %</td></tr>
+<tr><td>数学</td><td><strong>MATH</strong> 難易度の高い数学問題 (代数, 幾何, 微積分)</td><td>32.6 %</td><td><strong>34.1 %</strong></td></tr>
+<tr><td>コード</td><td><strong>HumanEval</strong> Python コードの生成</td><td><strong>67.7 %</strong></td><td>48.1 %</td></tr>
+<tr><td>コード</td><td><strong>Natural2Code</strong> Python コードの生成. HumanEval のような新しいデータセット.</td><td><strong>69.6 %</strong></td><td>62.3 %</td></tr>
+</tbody></table>
+</div>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="how-to/image-generation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="premium-access.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="how-to/image-generation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="premium-access.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
