@@ -235,7 +235,7 @@ async fn count_tokens(
     }
 
     let res = client
-        .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent")
+        .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens")
         .header(X_GOOG_API_KEY, token)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(reqwest::Body::from(serde_json::to_vec(&Request {
