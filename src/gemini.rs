@@ -45,8 +45,8 @@ impl super::Completion for Gemini {
             anyhow::bail!("unexpected status code: {}", res.status());
         }
 
-        let res = res.text().await?;
-        let res = serde_json::from_str::<Response>(&res)?;
+        let res = res.bytes().await?;
+        let res = serde_json::from_slice::<Response>(&res)?;
 
         let [candidate] = res.candidates;
 
@@ -246,8 +246,8 @@ async fn count_tokens(
         anyhow::bail!("unexpected status code: {}", res.status());
     }
 
-    let res = res.text().await?;
-    let res = serde_json::from_str::<Response>(&res)?;
+    let res = res.bytes().await?;
+    let res = serde_json::from_slice::<Response>(&res)?;
 
     Ok(res.total_tokens)
 }

@@ -41,8 +41,8 @@ impl super::Completion for Gpt4 {
             anyhow::bail!("unexpected status code: {}", res.status());
         }
 
-        let res = res.text().await?;
-        let res = serde_json::from_str::<Response>(&res)?;
+        let res = res.bytes().await?;
+        let res = serde_json::from_slice::<Response>(&res)?;
 
         let [choice] = &res.choices[..] else {
             anyhow::bail!("unexpected number of choices: {}", res.choices.len());
