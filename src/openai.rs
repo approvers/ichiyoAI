@@ -7,15 +7,21 @@ pub struct OpenAi<Model> {
 
 trait Model: for<'de> serde::de::Deserialize<'de> {
     fn name() -> &'static str;
+    fn price_yen(req_tokens: usize, res_tokens: usize) -> f64;
 }
 
 macro_rules! define_model {
-    ($vis:vis $name:ident : $model:expr) => {
+    ($vis:vis $name:ident : $model:expr , rate = req $rreq:expr, res $rres:expr) => {
         $vis struct $name;
 
         impl Model for $name {
             fn name() -> &'static str {
                 $model
+            }
+
+            fn price_yen(req_tokens: usize, res_tokens: usize) -> f64 {
+                // あくまでも概算なので, 浮動小数点数程度の精度で十分
+                ($rreq * req_tokens as f64 + $rres * res_tokens as f64) / 1000.0 * 150.0
             }
         }
 
@@ -27,8 +33,8 @@ macro_rules! define_model {
     };
 }
 
-define_model!(pub GPT4Turbo: "gpt-4-1106-preview");
-define_model!(pub GPT35Turbo: "gpt-3.5-turbo-1106");
+define_model!(pub GPT4Turbo:  "gpt-4-1106-preview", rate = req 0.01  , res 0.03  );
+define_model!(pub GPT35Turbo: "gpt-3.5-turbo-1106", rate = req 0.0010, res 0.0020);
 
 #[allow(private_bounds)]
 impl<Model: self::Model> OpenAi<Model> {
