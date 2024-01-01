@@ -1,3 +1,4 @@
+use crate::adapters::message::start_typing;
 use crate::adapters::{
     message::{push_referenced_msg_to_prompts, reply_chatgpt_response},
     user::is_sponsor,
@@ -83,6 +84,8 @@ impl EventHandler for EvHandler {
             .openai_api_key
             .as_str();
 
+        let typing = start_typing(ctx.http.clone(), msg.channel_id);
+
         let result = match is_sponsor {
             true => {
                 let engine = OpenAiGPT4Turbo::new(token);
@@ -97,6 +100,8 @@ impl EventHandler for EvHandler {
                     .context("Operation timed out")
             }
         };
+
+        typing.stop();
 
         let (response, metadata) = match result {
             Ok(Ok(response)) => response,
