@@ -9,7 +9,7 @@ use serenity::{
 
 use crate::model::env::ICHIYOAI_ENV;
 
-pub async fn is_sponsor(ctx: &Context, msg_author: User) -> anyhow::Result<bool> {
+pub async fn is_sponsor(ctx: &Context, msg_author: &User) -> anyhow::Result<bool> {
     msg_author
         .has_role(
             &ctx,
