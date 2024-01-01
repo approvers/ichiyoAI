@@ -87,6 +87,8 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
         let content = choice.message.content.trim().to_owned();
         let metadata = Metadata {
             tokens: res.usage.total_tokens,
+            price_yen: Model::price_yen(res.usage.prompt_tokens, res.usage.completion_tokens),
+            by: Model::name(),
         };
 
         Ok((super::Message::Model { id: (), content }, metadata))
@@ -95,6 +97,22 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
 
 pub struct Metadata {
     pub tokens: usize,
+    pub price_yen: f64,
+    pub by: &'static str,
+}
+
+impl super::Metadata for Metadata {
+    fn tokens(&self) -> usize {
+        self.tokens
+    }
+
+    fn price_yen(&self) -> f64 {
+        self.price_yen
+    }
+
+    fn by(&self) -> &'static str {
+        self.by
+    }
 }
 
 #[derive(serde::Serialize)]
@@ -196,8 +214,8 @@ struct ChoiceMessage<'a> {
 
 #[derive(serde::Deserialize)]
 struct Usage {
-    // completion_tokens: usize,
-    // prompt_tokens: usize,
+    completion_tokens: usize,
+    prompt_tokens: usize,
     total_tokens: usize,
 }
 
