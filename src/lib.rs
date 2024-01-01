@@ -22,8 +22,14 @@ impl<I> Message<I> {
     }
 }
 
+pub trait Metadata {
+    fn tokens(&self) -> usize;
+    fn price_yen(&self) -> f64;
+    fn by(&self) -> &str;
+}
+
 pub trait Completion {
-    type Metadata;
+    type Metadata: Metadata;
 
     fn next<I: Send + Sync>(
         &self,
