@@ -71,7 +71,7 @@ impl EventHandler for EvHandler {
             Ok(is_sponsor) => is_sponsor,
             Err(why) => {
                 error!("Failed to check sponsor: {}", why);
-                return;
+                false
             }
         };
 
@@ -118,7 +118,7 @@ impl EventHandler for EvHandler {
         info!("Starting...");
 
         let version = env!("CARGO_PKG_VERSION");
-        ctx.set_activity(Some(ActivityData::playing(format!("v{version}"))));
+        ctx.set_activity(Some(ActivityData::playing(&format!("v{}", version))));
 
         info!("Running ichiyoAI v{}", version);
         info!(
