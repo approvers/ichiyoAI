@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.20.0...ichiyo_ai-v1.20.1) (2024-01-02)
+
+
+### Bug Fixes
+
+* `serde_json` の "expected a borrowd string" のエラー ([#179](https://github.com/approvers/ichiyoAI/issues/179)) ([5cc69ce](https://github.com/approvers/ichiyoAI/commit/5cc69ce5496617e5b3200080242e597a067d262a))
+
 ## [1.20.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.19.1...ichiyo_ai-v1.20.0) (2024-01-02)
 
 
