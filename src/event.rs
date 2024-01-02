@@ -54,7 +54,7 @@ impl EventHandler for EvHandler {
 
         if msg.kind == MessageType::InlineReply {
             let Some(referenced_id) = msg.referenced_message.as_ref().map(|m| m.id) else {
-                panic!();
+                panic!("Failed to get referenced message id");
             };
 
             if let Err(why) =
