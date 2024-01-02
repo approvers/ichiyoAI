@@ -45,10 +45,12 @@ pub type OpenAiGPT4Turbo = openai::OpenAi<openai::GPT4Turbo>;
 pub type OpenAiGPT35Turbo = openai::OpenAi<openai::GPT35Turbo>;
 
 pub trait Image {
+    type Metadata;
+
     fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
-    ) -> impl Future<Output = anyhow::Result<GeneratedImage>> + Send + Sync;
+    ) -> impl Future<Output = anyhow::Result<(GeneratedImage, Self::Metadata)>> + Send + Sync;
 }
 
 pub struct GeneratedImage {
