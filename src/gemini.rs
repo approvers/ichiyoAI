@@ -83,6 +83,20 @@ pub struct Metadata {
     pub tokens: usize,
 }
 
+impl super::Metadata for Metadata {
+    fn tokens(&self) -> usize {
+        self.tokens
+    }
+
+    fn price_yen(&self) -> f64 {
+        0.0
+    }
+
+    fn by(&self) -> &str {
+        "genimi-pro"
+    }
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Request<'a> {

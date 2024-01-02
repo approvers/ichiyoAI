@@ -1,4 +1,11 @@
-use async_openai::types::{ChatCompletionRequestMessage, ChatCompletionRequestUserMessageArgs};
+use crate::adapters::message::start_typing;
+use crate::adapters::{
+    message::{push_referenced_msg_to_prompts, reply_chatgpt_response},
+    user::is_sponsor,
+};
+use crate::model::env::ICHIYOAI_ENV;
+use ichiyo_ai::Completion as _;
+use ichiyo_ai::{OpenAiGPT35Turbo, OpenAiGPT4Turbo};
 use once_cell::sync::OnceCell;
 use serenity::{
     async_trait,
@@ -9,12 +16,6 @@ use serenity::{
 };
 use std::result::Result::Ok;
 use tracing::{error, info};
-
-use crate::adapters::{
-    chatgpt::request_chatgpt_response,
-    message::{push_referenced_msg_to_prompts, reply_chatgpt_response},
-    user::is_sponsor,
-};
 
 pub struct EvHandler;
 
@@ -34,48 +35,77 @@ impl EventHandler for EvHandler {
 
         let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user().id));
         let content = msg.content.replace(mention, "");
-        let mut prompts: Vec<ChatCompletionRequestMessage> =
-            vec![ChatCompletionRequestUserMessageArgs::default()
-                .content(SYSTEM_CONTEXT)
-                .build()
-                .unwrap()
-                .into()];
-
-        println!("content: {}", content);
-
         if content.chars().count() == 0 {
             return;
         }
 
-        prompts.push(
-            ChatCompletionRequestUserMessageArgs::default()
-                .content(content)
-                .build()
-                .unwrap()
-                .into(),
-        );
+        let mut messages = Vec::new();
+        messages.push(ichiyo_ai::Message::User {
+            id: (),
+            content: SYSTEM_CONTEXT.to_owned(),
+        });
+
+        messages.push({
+            match msg.is_own(&ctx) {
+                true => ichiyo_ai::Message::Model { id: (), content },
+                false => ichiyo_ai::Message::User { id: (), content },
+            }
+        });
 
         if msg.kind == MessageType::InlineReply {
-            if let Err(why) = push_referenced_msg_to_prompts(&mut prompts, &ctx, &msg).await {
+            let Some(referenced_id) = msg.referenced_message.as_ref().map(|m| m.id) else {
+                panic!("Failed to get referenced message id");
+            };
+
+            if let Err(why) =
+                push_referenced_msg_to_prompts(&ctx, &mut messages, msg.channel_id, referenced_id)
+                    .await
+            {
                 error!("Failed to push referenced message to prompts: {}", why);
                 return;
             }
         }
 
-        let is_gpt4 = match is_sponsor(&ctx, msg.clone().author).await {
-            Ok(is_gpt4) => is_gpt4,
+        messages.reverse();
+
+        let is_sponsor = match is_sponsor(&ctx, &msg.author).await {
+            Ok(is_sponsor) => is_sponsor,
             Err(why) => {
                 error!("Failed to check sponsor: {}", why);
                 false
             }
         };
 
-        prompts.reverse();
+        use anyhow::Context as _;
 
-        let response = match request_chatgpt_response(&ctx, msg.channel_id, prompts, is_gpt4).await
-        {
-            Ok(response) => response,
-            Err(why) => {
+        let token = ICHIYOAI_ENV
+            .get()
+            .expect("Failed to get openai api key from env")
+            .openai_api_key
+            .as_str();
+
+        let typing = start_typing(ctx.http.clone(), msg.channel_id);
+
+        let result = match is_sponsor {
+            true => {
+                let engine = OpenAiGPT4Turbo::new(token);
+                tokio::time::timeout(crate::adapters::TIMEOUT_DURATION, engine.next(&messages))
+                    .await
+                    .context("Operation timed out")
+            }
+            false => {
+                let engine = OpenAiGPT35Turbo::new(token);
+                tokio::time::timeout(crate::adapters::TIMEOUT_DURATION, engine.next(&messages))
+                    .await
+                    .context("Operation timed out")
+            }
+        };
+
+        typing.stop();
+
+        let (response, metadata) = match result {
+            Ok(Ok(response)) => response,
+            Ok(Err(why)) | Err(why) => {
                 let _ = msg
                     .reply_ping(&ctx, format!("An error has occurred: {}", why))
                     .await;
@@ -84,7 +114,9 @@ impl EventHandler for EvHandler {
             }
         };
 
-        reply_chatgpt_response(response, &ctx, &msg).await.unwrap();
+        reply_chatgpt_response(&ctx, &msg, response.content(), &metadata)
+            .await
+            .unwrap();
     }
 
     async fn ready(&self, ctx: Context, self_bot: Ready) {

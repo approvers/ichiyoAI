@@ -14,7 +14,7 @@ use crate::adapters::user::is_sponsor;
 async fn davinci(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let prompt = args.raw_quoted().collect::<String>();
 
-    let is_dalle4 = match is_sponsor(ctx, msg.clone().author).await {
+    let is_dalle4 = match is_sponsor(ctx, &msg.author).await {
         Ok(is_gpt4) => is_gpt4,
         Err(why) => {
             error!("Failed to check sponsor: {}", why);
