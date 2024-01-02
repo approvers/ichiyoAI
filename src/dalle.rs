@@ -33,10 +33,12 @@ impl<Model> OpenAi<Model> {
 }
 
 impl<Model: self::Model + Send + Sync> super::Image for OpenAi<Model> {
+    type Metadata = Metadata;
+
     async fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
-    ) -> anyhow::Result<super::GeneratedImage> {
+    ) -> anyhow::Result<(super::GeneratedImage, Self::Metadata)> {
         let req = Request {
             prompt: prompt.as_ref(),
             model: Model::NAME,
@@ -63,12 +65,20 @@ impl<Model: self::Model + Send + Sync> super::Image for OpenAi<Model> {
         let [image] = res.data;
         assert!(image.b64_json.is_png());
 
-        Ok(super::GeneratedImage {
+        let image = super::GeneratedImage {
             image: image.b64_json.0,
             prompt: image.revised_prompt.unwrap_or(prompt.as_ref()).to_owned(),
             ext: super::ImageExt::Png,
-        })
+        };
+
+        let metadata = Metadata { model: Model::NAME };
+
+        Ok((image, metadata))
     }
+}
+
+pub struct Metadata {
+    pub model: &'static str,
 }
 
 #[derive(serde::Serialize)]
