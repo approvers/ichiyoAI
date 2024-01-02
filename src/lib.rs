@@ -37,3 +37,34 @@ mod openai;
 pub use gemini::Gemini;
 pub type OpenAiGPT4Turbo = openai::OpenAi<openai::GPT4Turbo>;
 pub type OpenAiGPT35Turbo = openai::OpenAi<openai::GPT35Turbo>;
+
+pub trait Image {
+    fn create(
+        &self,
+        prompt: impl AsRef<str> + Send + Sync,
+    ) -> impl Future<Output = anyhow::Result<GeneratedImage>> + Send + Sync;
+}
+
+pub struct GeneratedImage {
+    pub image: Vec<u8>,
+    pub prompt: String,
+    pub ext: ImageExt,
+}
+
+#[non_exhaustive]
+pub enum ImageExt {
+    Png,
+}
+
+impl ImageExt {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Png => "PNG",
+        }
+    }
+}
+
+mod dalle;
+
+pub type OpenAiDallE2 = dalle::OpenAi<dalle::DallE2>;
+pub type OpenAiDallE3 = dalle::OpenAi<dalle::DallE3>;
