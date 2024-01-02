@@ -133,10 +133,10 @@ impl<'a, I> From<&'a super::Message<I>> for Message<'a> {
     fn from(message: &'a super::Message<I>) -> Self {
         match message {
             super::Message::User { content, .. } => Self::User {
-                content: content.into(),
+                content: content.as_str(),
             },
             super::Message::Model { content, .. } => Self::Assistant {
-                content: content.into(),
+                content: content.as_str(),
             },
         }
     }
