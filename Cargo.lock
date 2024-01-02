@@ -683,6 +683,7 @@ version = "1.19.1"
 dependencies = [
  "anyhow",
  "async-openai",
+ "base64",
  "dotenvy",
  "envy",
  "once_cell",

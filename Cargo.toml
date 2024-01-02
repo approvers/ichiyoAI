@@ -16,6 +16,7 @@ envy = { version = "0.4" }
 typed-builder = { version = "0.18" }
 reqwest = { version = "0.11" }
 serde_json = { version = "1.0" }
+base64 = { version = "0.21" }
 
 [dependencies.serenity]
 version = "0.12"
