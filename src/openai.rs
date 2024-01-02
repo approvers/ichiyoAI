@@ -125,14 +125,8 @@ struct Request<'a> {
 #[serde(tag = "role")]
 #[serde(rename_all = "lowercase")]
 enum Message<'a> {
-    User {
-        // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
-        content: alloc::borrow::Cow<'a, str>,
-    },
-    Assistant {
-        // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
-        content: alloc::borrow::Cow<'a, str>,
-    },
+    User { content: &'a str },
+    Assistant { content: &'a str },
 }
 
 impl<'a, I> From<&'a super::Message<I>> for Message<'a> {
@@ -207,7 +201,8 @@ impl core::fmt::Display for FinishReason {
 
 #[derive(serde::Deserialize)]
 struct ChoiceMessage<'a> {
-    content: &'a str,
+    // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
+    content: alloc::borrow::Cow<'a, str>,
     // tool_calls: Vec<ToolCall>,
     // role: Role,
 }
