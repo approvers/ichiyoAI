@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.20.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.19.1...ichiyo_ai-v1.20.0) (2024-01-02)
+
+
+> [!NOTE]
+> ichiyoAI v1 最後のリリースになります
+
+### Features
+
+* 内部で使う生成系 AI の API の wrapper を実装する ([#165](https://github.com/approvers/ichiyoAI/issues/165)) ([794c59f](https://github.com/approvers/ichiyoAI/commit/794c59f934f83f10ccab786b38b81c16fabac56e))
+* 内部で使う画像生成系の AI の API の wrapper を実装する ([#177](https://github.com/approvers/ichiyoAI/issues/177)) ([5775763](https://github.com/approvers/ichiyoAI/commit/577576383f63f5bc5e594492a3e6eb432d71705d))
+  * Text Generation, Image Generation は ichiyoAI:lib (内部Wrapper) に置き換わりました.
+  * これにより, `async_openai` に依存しなくなりました.
+  * 2つの変更は [@Nanai10a](https://github.com/Nanai10a) が実装しました. Thanks :heart:
+
 ## [1.19.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.19.0...ichiyo_ai-v1.19.1) (2023-12-09)
 
 
