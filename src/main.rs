@@ -24,6 +24,14 @@ struct Features;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let _guard = sentry::init((
+        "https://9b3336d17db273bfd0822c1cd2b01322@sentry.approvers.dev/4",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
+
     dotenv().ok();
     tracing_subscriber::fmt().compact().init();
 
