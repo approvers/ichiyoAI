@@ -4,43 +4,33 @@
 [![clippy](https://github.com/approvers/ichiyoAI/actions/workflows/clippy.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/clippy.yaml)
 [![rustfmt](https://github.com/approvers/ichiyoAI/actions/workflows/fmt.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/fmt.yaml)
 [![Release ichiyoAI](https://github.com/approvers/ichiyoAI/actions/workflows/release.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/release.yaml)
+[![deploy-docs](https://github.com/approvers/ichiyoAI/actions/workflows/deploy-docs.yaml/badge.svg)](https://github.com/approvers/ichiyoAI/actions/workflows/deploy-docs.yaml)
 
-ichiyoAI は OpenAI の [ChatGPT](https://openai.com/chatgpt) ・ [DALL-E](https://openai.com/dall-e-3) が利用できる Discord Bot です.
+[ChatGPT](https://openai.com/chatgpt) / [Gemini](https://deepmind.google/technologies/gemini) / [DALL-E](https://openai.com/dall-e-3) が利用できる Discord Bot.
 
 - [Features](#features)
-  - [Coming Soon...](#coming-soon)
 - [Usage](#usage)
-  - [ChatGPT (Text Generation)](#chatgpt-text-generation)
-  - [DALL-E (Image Generation)](#dall-e-image-generation)
 - [Supported Models](#supported-models)
   - [GPT-4](#gpt-4)
   - [GPT-3.5](#gpt-35)
+  - [Gemini](#gemini)
   - [DALL-E](#dall-e)
 - [Installation](#installation)
 - [Environment Variables](#environment-variables)
 
+[ドキュメント](https://ichiyoai.approvers.dev)
+
 ## Features
 
-- LLM である **GPT-4 Turbo** & **GPT-3.5 Turbo** を使用した [Text Generation](https://platform.openai.com/docs/guides/text-generation)
-- 深層学習モデルである **DALL·E 3** & **DALL·E 2** を使用した [Image Generation](https://platform.openai.com/docs/guides/images)
-
-### Coming Soon...
-
-- [ ] **GPT-4V** ( `gpt-4-vision-preview` ) を使用した [Vision](https://platform.openai.com/docs/guides/vision) への対応
+- LLM である **GPT-4 Turbo** & **GPT-3.5 Turbo** & **Gemini** を使用した Text Generation (テキスト生成)
+- 深層学習モデルである **DALL·E 3** & **DALL·E 2** を使用した Image Generation (画像生成)
 
 ## Usage
 
-### ChatGPT (Text Generation)
+詳しい使い方についてはドキュメントを参照してください.
 
-ichiyoAI に接続している Discord Bot に対してメンションを送信すると, そのメッセージに対して ChatGPT が応答します.
-
-ichiyoAI のメッセージに対してメンション付きで返信すると, 返信元のリプライまで ChatGPT が理解した上で応答します.
-
-### DALL-E (Image Generation)
-
-`!image` / `!davinci` コマンドを使用すると, DALL-E が画像を生成します.
-
-第一引数にプロンプトを指定します. DALL-E 独自の倫理コードが存在し不適切なプロンプトは拒否されます.
+- [Text Generation](https://ichiyoai.approvers.dev/how-to/text-generation.html)
+- [Image Generation](https://ichiyoai.approvers.dev/how-to/image-generation.html)
 
 ## Supported Models
 
@@ -64,6 +54,17 @@ GPT-3 を改良し, 自然言語やコードを理解・生成できる言語モ
 | gpt-3.5-turbo-1106 | v1.16.0 〜 | 16,385 Token | Sep 2021 | $0.0010 / 1k | $0.0020 / 1k |
 | gpt-3.5-turbo (Current: gpt-3.5-turbo-0613) | 〜 v1.15.4 | 4,096 Token | Sep 2021 | $0.0015 / 1k | $0.002 / 1k |
 
+### Gemini
+
+Google が2014年に買収したイギリスにある Alphabet の人工知能子会社 **DeepMind Technologies** が開発したマルチモーダル大規模言語モデル.
+
+LaMDA, PaLM2 の後継として供し, Gemini Ultra, Gemini Pro, Gemini Nano からなり, [GPT-4](#gpt-4) のライバルとして位置づけられている.
+
+| モデル名 | ichiyoAI の対応バージョン | Input | Output | Price |
+| --- | --- | --- | --- | --- |
+| Gemini Pro | `v2.0.0` 〜 | Text | Text | Free |
+| Gemini Pro Vision | 未対応(`*`) | Text and Image | Text | Free |
+
 ### DALL-E
 
 自然言語による記述からリアルな画像やアートを生成できる深層学習モデル.
@@ -81,12 +82,15 @@ GPT-3 を改良し, 自然言語やコードを理解・生成できる言語モ
 > [!NOTE]
 > 限界開発鯖のメンバーは限界開発鯖内で利用できます.
 
+> [!WARNING]
+> ichiyoAI は限界開発鯖で利用されることを想定しているため, 限界開発鯖以外での利用はサポートされていません.
+
 ```shell
 # 最新版
 docker pull ghcr.io/approvers/ichiyo_ai:latest
 
 # メジャーバージョン指定
-docker pull ghcr.io/approvers/ichiyo_ai:v1
+docker pull ghcr.io/approvers/ichiyo_ai:v2
 
 # バージョン指定
 docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
