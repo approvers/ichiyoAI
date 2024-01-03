@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.20.1...ichiyo_ai-v1.21.0) (2024-01-03)
+
+
+### Features
+
+* Sentry の有効化 ([#182](https://github.com/approvers/ichiyoAI/issues/182)) ([3b647f3](https://github.com/approvers/ichiyoAI/commit/3b647f32c7402f609a3adee1b472b643b69ad223))
+
 ## [1.20.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.20.0...ichiyo_ai-v1.20.1) (2024-01-02)
 
 
