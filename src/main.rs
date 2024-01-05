@@ -1,15 +1,31 @@
 use anyhow::Context;
 use dotenvy::dotenv;
 use event::EvHandler;
+use serde::{Deserialize, Serialize};
 use serenity::{model::gateway::GatewayIntents, Client};
+use std::sync::OnceLock;
 
-mod adapters;
 mod event;
-mod model;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct IchiyoAiEnv {
+    pub discord_api_token: String,
+    pub openai_api_key: String,
+    pub google_ai_api_key: String,
+    pub guild_id: u64,
+    pub sponsor_role_id: u64,
+    pub sentry_dsn: String,
+}
+
+pub fn envs() -> &'static IchiyoAiEnv {
+    static CACHE: OnceLock<IchiyoAiEnv> = OnceLock::new();
+
+    CACHE.get_or_init(|| envy::from_env().expect("Failed to load enviroment variables"))
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let envs = model::env::envs();
+    let envs = crate::envs();
 
     let _guard = sentry::init((
         &*envs.sentry_dsn,

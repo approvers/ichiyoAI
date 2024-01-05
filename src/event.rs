@@ -1,5 +1,4 @@
-use crate::adapters::user::is_sponsor;
-
+use anyhow::Context as _;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
 use serenity::builder::CreateInteractionResponse;
@@ -7,6 +6,7 @@ use serenity::builder::CreateInteractionResponseMessage;
 use serenity::model::application::CommandDataOptionValue;
 use serenity::model::application::CommandType;
 use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
+use serenity::model::user::User;
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
@@ -14,8 +14,23 @@ use serenity::{
     model::channel::Message,
     model::gateway::Ready,
 };
-
 use tracing::info;
+
+use std::time::Duration;
+
+// DaLL-E & ChatGPT で使用するタイムアウト時間の定数
+pub static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
+
+pub async fn is_sponsor(ctx: &Context, user: &User) -> anyhow::Result<bool> {
+    let envs = crate::envs();
+
+    let guild_id = envs.guild_id;
+    let role_id = envs.sponsor_role_id;
+
+    user.has_role(ctx, guild_id, role_id)
+        .await
+        .context("Failed to get sponsor role")
+}
 
 pub struct EvHandler;
 
@@ -88,13 +103,13 @@ async fn image(ctx: &Context, ci: &CommandInteraction) {
     use ichiyo_ai::Image as _;
     let result = match modelname {
         Modelname::DallE2 => {
-            let token = &crate::model::env::envs().openai_api_key;
+            let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiDallE2::new(token);
 
             engine.create(prompt).await
         }
         Modelname::DallE3 => {
-            let token = &crate::model::env::envs().openai_api_key;
+            let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiDallE3::new(token);
 
             engine.create(prompt).await
@@ -169,19 +184,19 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     use ichiyo_ai::Completion as _;
     let result = match modelname {
         Modelname::GPT35Turbo => {
-            let token = &crate::model::env::envs().openai_api_key;
+            let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiGPT35Turbo::new(token);
 
             engine.next(&msgs).await
         }
         Modelname::GPT4Turbo => {
-            let token = &crate::model::env::envs().openai_api_key;
+            let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiGPT4Turbo::new(token);
 
             engine.next(&msgs).await
         }
         Modelname::GeminiPro => {
-            let token = &crate::model::env::envs().google_ai_api_key;
+            let token = &crate::envs().google_ai_api_key;
             let engine = ichiyo_ai::Gemini::new(token);
 
             engine.next(&msgs).await
