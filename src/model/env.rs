@@ -8,6 +8,7 @@ pub struct IchiyoAiEnv {
     pub google_ai_api_key: String,
     pub guild_id: u64,
     pub sponsor_role_id: u64,
+    pub sentry_dsn: String,
 }
 
 pub fn envs() -> &'static IchiyoAiEnv {
