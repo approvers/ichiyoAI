@@ -14,12 +14,10 @@ impl Gemini {
 }
 
 impl super::Completion for Gemini {
-    type Metadata = Metadata;
-
-    async fn next<I: Send + Sync>(
+    async fn next(
         &self,
-        messages: &[super::Message<I>],
-    ) -> anyhow::Result<(super::Message<()>, Self::Metadata)> {
+        messages: &[super::Message],
+    ) -> anyhow::Result<(super::Message, super::Metadata)> {
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
         };
@@ -71,29 +69,13 @@ impl super::Completion for Gemini {
             .chain([candidate.content])
             .collect();
 
-        let metadata = Metadata {
+        let metadata = super::Metadata {
             tokens: count_tokens(&self.http, &self.token, contents).await?,
+            price_yen: 0.0,
+            by: "genimi-pro",
         };
 
-        Ok((super::Message::Model { id: (), content }, metadata))
-    }
-}
-
-pub struct Metadata {
-    pub tokens: usize,
-}
-
-impl super::Metadata for Metadata {
-    fn tokens(&self) -> usize {
-        self.tokens
-    }
-
-    fn price_yen(&self) -> f64 {
-        0.0
-    }
-
-    fn by(&self) -> &str {
-        "genimi-pro"
+        Ok((super::Message::Model { content }, metadata))
     }
 }
 
@@ -124,8 +106,8 @@ enum Part<'a> {
     // FunctionResponse(FunctionResponse),
 }
 
-impl<'a, I> From<&'a super::Message<I>> for Content<'a> {
-    fn from(message: &'a super::Message<I>) -> Self {
+impl<'a> From<&'a super::Message> for Content<'a> {
+    fn from(message: &'a super::Message) -> Self {
         match message {
             super::Message::User { content, .. } => Self::User {
                 parts: vec![Part::Text(content.into())],

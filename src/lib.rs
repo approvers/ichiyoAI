@@ -1,19 +1,12 @@
 extern crate alloc;
 use core::future::Future;
 
-pub enum Message<I> {
-    User { id: I, content: String },
-    Model { id: I, content: String },
+pub enum Message {
+    User { content: String },
+    Model { content: String },
 }
 
-impl<I> Message<I> {
-    pub fn id(&self) -> &I {
-        match self {
-            Self::User { id, .. } => id,
-            Self::Model { id, .. } => id,
-        }
-    }
-
+impl Message {
     pub fn content(&self) -> &str {
         match self {
             Self::User { content, .. } => content,
@@ -22,19 +15,17 @@ impl<I> Message<I> {
     }
 }
 
-pub trait Metadata {
-    fn tokens(&self) -> usize;
-    fn price_yen(&self) -> f64;
-    fn by(&self) -> &str;
+pub struct Metadata {
+    pub tokens: usize,
+    pub price_yen: f64,
+    pub by: &'static str,
 }
 
 pub trait Completion {
-    type Metadata: Metadata;
-
-    fn next<I: Send + Sync>(
+    fn next(
         &self,
-        messages: &[Message<I>],
-    ) -> impl Future<Output = anyhow::Result<(Message<()>, Self::Metadata)>> + Send + Sync;
+        messages: &[Message],
+    ) -> impl Future<Output = anyhow::Result<(Message, Metadata)>> + Send + Sync;
 }
 
 mod gemini;

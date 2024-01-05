@@ -48,12 +48,10 @@ impl<Model: self::Model> OpenAi<Model> {
 }
 
 impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
-    type Metadata = Metadata;
-
-    async fn next<I: Send + Sync>(
+    async fn next(
         &self,
-        messages: &[super::Message<I>],
-    ) -> anyhow::Result<(super::Message<()>, Self::Metadata)> {
+        messages: &[super::Message],
+    ) -> anyhow::Result<(super::Message, super::Metadata)> {
         let req = Request {
             model: Model::name(),
             messages: messages.iter().map(Into::into).collect(),
@@ -85,33 +83,13 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
         }
 
         let content = choice.message.content.trim().to_owned();
-        let metadata = Metadata {
+        let metadata = super::Metadata {
             tokens: res.usage.total_tokens,
             price_yen: Model::price_yen(res.usage.prompt_tokens, res.usage.completion_tokens),
             by: Model::name(),
         };
 
-        Ok((super::Message::Model { id: (), content }, metadata))
-    }
-}
-
-pub struct Metadata {
-    pub tokens: usize,
-    pub price_yen: f64,
-    pub by: &'static str,
-}
-
-impl super::Metadata for Metadata {
-    fn tokens(&self) -> usize {
-        self.tokens
-    }
-
-    fn price_yen(&self) -> f64 {
-        self.price_yen
-    }
-
-    fn by(&self) -> &'static str {
-        self.by
+        Ok((super::Message::Model { content }, metadata))
     }
 }
 
@@ -129,8 +107,8 @@ enum Message<'a> {
     Assistant { content: &'a str },
 }
 
-impl<'a, I> From<&'a super::Message<I>> for Message<'a> {
-    fn from(message: &'a super::Message<I>) -> Self {
+impl<'a> From<&'a super::Message> for Message<'a> {
+    fn from(message: &'a super::Message) -> Self {
         match message {
             super::Message::User { content, .. } => Self::User {
                 content: content.as_str(),
