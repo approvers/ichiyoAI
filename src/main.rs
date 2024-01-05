@@ -1,26 +1,11 @@
-use crate::model::env::{IchiyoAiEnv, ICHIYOAI_ENV};
 use anyhow::Context;
 use dotenvy::dotenv;
 use event::EvHandler;
-use serenity::{
-    framework::{
-        standard::{macros::group, Configuration},
-        StandardFramework,
-    },
-    model::gateway::GatewayIntents,
-    Client,
-};
-
-use crate::commands::davinci::DAVINCI_COMMAND;
+use serenity::{model::gateway::GatewayIntents, Client};
 
 mod adapters;
-mod commands;
 mod event;
 mod model;
-
-#[group]
-#[commands(davinci)]
-struct Features;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -35,17 +20,11 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     tracing_subscriber::fmt().compact().init();
 
-    ICHIYOAI_ENV
-        .set(envy::from_env::<IchiyoAiEnv>().expect("Failed to load enviroment variables"))
-        .unwrap();
-
-    let framework = StandardFramework::new().group(&FEATURES_GROUP);
-    framework.configure(Configuration::new().prefix("!"));
+    let envs = model::env::envs();
 
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = Client::builder(&ICHIYOAI_ENV.get().unwrap().discord_api_token, intents)
+    let mut client = Client::builder(&envs.discord_api_token, intents)
         .event_handler(EvHandler)
-        .framework(framework)
         .await
         .context("Failed to create discord client")?;
 

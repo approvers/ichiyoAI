@@ -1,122 +1,249 @@
-use crate::adapters::message::start_typing;
-use crate::adapters::{
-    message::{push_referenced_msg_to_prompts, reply_chatgpt_response},
-    user::is_sponsor,
-};
-use crate::model::env::ICHIYOAI_ENV;
-use ichiyo_ai::Completion as _;
-use ichiyo_ai::{OpenAiGPT35Turbo, OpenAiGPT4Turbo};
+use crate::adapters::user::is_sponsor;
+
 use once_cell::sync::OnceCell;
+use serenity::builder::CreateAttachment;
+use serenity::builder::CreateInteractionResponse;
+use serenity::builder::CreateInteractionResponseMessage;
+use serenity::model::application::CommandDataOptionValue;
+use serenity::model::application::CommandType;
+use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
     gateway::ActivityData,
     model::channel::Message,
-    model::{channel::MessageType, gateway::Ready},
+    model::gateway::Ready,
 };
-use std::result::Result::Ok;
-use tracing::{error, info};
+
+use tracing::info;
 
 pub struct EvHandler;
 
 pub static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。";
 pub static OWN_MENTION: OnceCell<String> = OnceCell::new();
 
+enum OptionsField<'a> {
+    Model(&'a str),
+    Prompt(&'a str),
+}
+
+struct Options<'a> {
+    model: Option<&'a str>,
+    prompt: Option<&'a str>,
+}
+
+impl<'a> FromIterator<OptionsField<'a>> for Options<'a> {
+    fn from_iter<T: IntoIterator<Item = OptionsField<'a>>>(iter: T) -> Self {
+        let mut model = None;
+        let mut prompt = None;
+
+        for field in iter {
+            match field {
+                OptionsField::Model(s) => model = Some(s),
+                OptionsField::Prompt(s) => prompt = Some(s),
+            }
+        }
+
+        Self { model, prompt }
+    }
+}
+
+async fn image(ctx: &Context, ci: &CommandInteraction) {
+    enum Modelname {
+        DallE2,
+        DallE3,
+    }
+
+    let opts = ci
+        .data
+        .options
+        .iter()
+        .filter_map(|o| match (&*o.name, &o.value) {
+            ("model", CommandDataOptionValue::String(s)) => Some(OptionsField::Model(s)),
+            ("prompt", CommandDataOptionValue::String(s)) => Some(OptionsField::Prompt(s)),
+
+            _ => None,
+        })
+        .collect::<Options>();
+
+    let modelname = match opts.model {
+        Some("dall-e-2") => Modelname::DallE2,
+        Some("dall-e-3") => Modelname::DallE3,
+
+        Some(name) => unreachable!("Unexpected model name: {:?}", name),
+        None => unreachable!("Model name is required"),
+    };
+
+    match (is_sponsor(ctx, &ci.user).await.unwrap(), &modelname) {
+        (false, Modelname::DallE3) => panic!(),
+        _ => (/* means for all users */),
+    }
+
+    let prompt = match opts.prompt {
+        Some("") => unreachable!("empty prompt is not allowed"),
+        Some(prompt) => prompt,
+        None => unreachable!("prompt is required"),
+    };
+
+    use ichiyo_ai::Image as _;
+    let result = match modelname {
+        Modelname::DallE2 => {
+            let token = &crate::model::env::envs().openai_api_key;
+            let engine = ichiyo_ai::OpenAiDallE2::new(token);
+
+            engine.create(prompt).await
+        }
+        Modelname::DallE3 => {
+            let token = &crate::model::env::envs().openai_api_key;
+            let engine = ichiyo_ai::OpenAiDallE3::new(token);
+
+            engine.create(prompt).await
+        }
+    };
+
+    let (content, files) = {
+        let (img, meta) = result.unwrap();
+
+        let ichiyo_ai::GeneratedImage { image, prompt, ext } = img;
+        let ichiyo_ai::dalle::Metadata { model } = meta;
+
+        let filename = format!("image.{}", ext.as_str());
+        let filedata = image;
+
+        let content = format!("{model} - **`{prompt}`**");
+
+        (content, [(filename, filedata)])
+    };
+
+    let cirm = CreateInteractionResponseMessage::default()
+        .content(content)
+        .files(files.map(|(name, raw)| CreateAttachment::bytes(raw, name)));
+
+    let cir = CreateInteractionResponse::Message(cirm);
+    ci.create_response(ctx, cir).await.unwrap()
+}
+
+async fn completion(ctx: &Context, ci: &CommandInteraction) {
+    enum Modelname {
+        GPT35Turbo,
+        GPT4Turbo,
+        GeminiPro,
+    }
+
+    let modelname = match &*ci.data.name {
+        "Text (GPT-3.5 Turbo)" => Modelname::GPT35Turbo,
+        "Text (GPT-4 Turbo)" => Modelname::GPT4Turbo,
+        "Text (Gemini Pro)" => Modelname::GeminiPro,
+
+        name => unreachable!("Unexpected model name: {:?}", name),
+    };
+
+    match (is_sponsor(ctx, &ci.user).await.unwrap(), &modelname) {
+        (false, Modelname::GPT4Turbo) => panic!(),
+        _ => (/* means for all users */),
+    }
+
+    let Some(ResolvedTarget::Message(msg)) = ci.data.target() else {
+        unreachable!("Unexpected target: {:?}", ci.data.target());
+    };
+
+    // first is newest, last is oldest
+    let mut msgs = ChainedMessages::new(msg)
+        .map(|m| {
+            if m.is_own(ctx) {
+                let (content, _) = m.content.rsplit_once("\n\n").unwrap();
+                let content = content.to_owned();
+
+                ichiyo_ai::Message::Model { content }
+            } else {
+                let content = m.content.clone();
+
+                ichiyo_ai::Message::User { content }
+            }
+        })
+        .collect::<Vec<_>>();
+
+    // first is oldest, last is newest
+    msgs.reverse();
+
+    use ichiyo_ai::Completion as _;
+    let result = match modelname {
+        Modelname::GPT35Turbo => {
+            let token = &crate::model::env::envs().openai_api_key;
+            let engine = ichiyo_ai::OpenAiGPT35Turbo::new(token);
+
+            engine.next(&msgs).await
+        }
+        Modelname::GPT4Turbo => {
+            let token = &crate::model::env::envs().openai_api_key;
+            let engine = ichiyo_ai::OpenAiGPT4Turbo::new(token);
+
+            engine.next(&msgs).await
+        }
+        Modelname::GeminiPro => {
+            let token = &crate::model::env::envs().google_ai_api_key;
+            let engine = ichiyo_ai::Gemini::new(token);
+
+            engine.next(&msgs).await
+        }
+    };
+
+    let content = {
+        let (msg, meta) = result.unwrap();
+
+        let content = msg.content();
+        let ichiyo_ai::Metadata {
+            tokens,
+            price_yen,
+            by,
+        } = meta;
+
+        format!("{content}\n\n`{by}` | ¥{price_yen:.2} | {tokens} tokens")
+    };
+
+    assert!(content.len() < 2000);
+
+    let cirm = CreateInteractionResponseMessage::default().content(content);
+    let cir = CreateInteractionResponse::Message(cirm);
+    ci.create_response(ctx, cir).await.unwrap()
+}
+
+struct ChainedMessages<'a> {
+    origin: &'a Message,
+}
+
+impl<'a> ChainedMessages<'a> {
+    fn new(origin: &'a Message) -> Self {
+        Self { origin }
+    }
+}
+
+impl<'a> Iterator for ChainedMessages<'a> {
+    type Item = &'a Message;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let msg = self.origin.referenced_message.as_ref()?;
+        self.origin = &**msg;
+        Some(self.origin)
+    }
+}
+
 #[async_trait]
 impl EventHandler for EvHandler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot || msg.is_private() {
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        let Some(ci) = interaction.as_command() else {
+            unreachable!("Unexpected interaction: {:?}", interaction);
+        };
+
+        if ci.user.bot || ci.user.system {
             return;
         }
 
-        if let Ok(false) = msg.mentions_me(&ctx).await {
-            return;
+        match ci.data.kind {
+            CommandType::ChatInput => image(&ctx, ci).await,
+            CommandType::Message => completion(&ctx, ci).await,
+            kind => unreachable!("Unexpected command type: {:?}", kind),
         }
-
-        let mention = OWN_MENTION.get_or_init(|| format!("<@{}>", ctx.cache.current_user().id));
-        let content = msg.content.replace(mention, "");
-        if content.chars().count() == 0 {
-            return;
-        }
-
-        let mut messages = Vec::new();
-        messages.push(ichiyo_ai::Message::User {
-            id: (),
-            content: SYSTEM_CONTEXT.to_owned(),
-        });
-
-        messages.push({
-            match msg.is_own(&ctx) {
-                true => ichiyo_ai::Message::Model { id: (), content },
-                false => ichiyo_ai::Message::User { id: (), content },
-            }
-        });
-
-        if msg.kind == MessageType::InlineReply {
-            let Some(referenced_id) = msg.referenced_message.as_ref().map(|m| m.id) else {
-                panic!("Failed to get referenced message id");
-            };
-
-            if let Err(why) =
-                push_referenced_msg_to_prompts(&ctx, &mut messages, msg.channel_id, referenced_id)
-                    .await
-            {
-                error!("Failed to push referenced message to prompts: {}", why);
-                return;
-            }
-        }
-
-        messages.reverse();
-
-        let is_sponsor = match is_sponsor(&ctx, &msg.author).await {
-            Ok(is_sponsor) => is_sponsor,
-            Err(why) => {
-                error!("Failed to check sponsor: {}", why);
-                false
-            }
-        };
-
-        use anyhow::Context as _;
-
-        let token = ICHIYOAI_ENV
-            .get()
-            .expect("Failed to get openai api key from env")
-            .openai_api_key
-            .as_str();
-
-        let typing = start_typing(ctx.http.clone(), msg.channel_id);
-
-        let result = match is_sponsor {
-            true => {
-                let engine = OpenAiGPT4Turbo::new(token);
-                tokio::time::timeout(crate::adapters::TIMEOUT_DURATION, engine.next(&messages))
-                    .await
-                    .context("Operation timed out")
-            }
-            false => {
-                let engine = OpenAiGPT35Turbo::new(token);
-                tokio::time::timeout(crate::adapters::TIMEOUT_DURATION, engine.next(&messages))
-                    .await
-                    .context("Operation timed out")
-            }
-        };
-
-        typing.stop();
-
-        let (response, metadata) = match result {
-            Ok(Ok(response)) => response,
-            Ok(Err(why)) | Err(why) => {
-                let _ = msg
-                    .reply_ping(&ctx, format!("An error has occurred: {}", why))
-                    .await;
-                error!("Failed to request chatgpt response: {}", why);
-                return;
-            }
-        };
-
-        reply_chatgpt_response(&ctx, &msg, response.content(), &metadata)
-            .await
-            .unwrap();
     }
 
     async fn ready(&self, ctx: Context, self_bot: Ready) {

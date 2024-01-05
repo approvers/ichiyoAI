@@ -1,21 +1,13 @@
 use anyhow::Context as _;
-use serenity::{
-    client::Context,
-    model::{
-        id::{GuildId, RoleId},
-        user::User,
-    },
-};
+use serenity::{client::Context, model::user::User};
 
-use crate::model::env::ICHIYOAI_ENV;
+pub async fn is_sponsor(ctx: &Context, user: &User) -> anyhow::Result<bool> {
+    let envs = crate::model::env::envs();
 
-pub async fn is_sponsor(ctx: &Context, msg_author: &User) -> anyhow::Result<bool> {
-    msg_author
-        .has_role(
-            &ctx,
-            GuildId::new(ICHIYOAI_ENV.get().unwrap().guild_id),
-            RoleId::new(ICHIYOAI_ENV.get().unwrap().sponsor_role_id),
-        )
+    let guild_id = envs.guild_id;
+    let role_id = envs.sponsor_role_id;
+
+    user.has_role(ctx, guild_id, role_id)
         .await
         .context("Failed to get sponsor role")
 }

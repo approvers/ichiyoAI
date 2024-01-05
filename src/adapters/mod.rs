@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-pub mod message;
 pub mod user;
 
 // DaLL-E & ChatGPT で使用するタイムアウト時間の定数

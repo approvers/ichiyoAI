@@ -63,7 +63,8 @@ impl ImageExt {
     }
 }
 
-mod dalle;
+// FIXME: needless `pub`
+pub mod dalle;
 
 pub type OpenAiDallE2 = dalle::OpenAi<dalle::DallE2>;
 pub type OpenAiDallE3 = dalle::OpenAi<dalle::DallE3>;

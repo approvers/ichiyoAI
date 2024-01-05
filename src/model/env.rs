@@ -1,5 +1,5 @@
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IchiyoAiEnv {
@@ -10,4 +10,8 @@ pub struct IchiyoAiEnv {
     pub sponsor_role_id: u64,
 }
 
-pub static ICHIYOAI_ENV: OnceCell<IchiyoAiEnv> = OnceCell::new();
+pub fn envs() -> &'static IchiyoAiEnv {
+    static CACHE: OnceLock<IchiyoAiEnv> = OnceLock::new();
+
+    CACHE.get_or_init(|| envy::from_env().expect("Failed to load enviroment variables"))
+}
