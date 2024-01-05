@@ -58,7 +58,7 @@ pub enum ImageExt {
 impl ImageExt {
     pub fn as_str(&self) -> &str {
         match self {
-            Self::Png => "PNG",
+            Self::Png => "png",
         }
     }
 }
