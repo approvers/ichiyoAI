@@ -123,7 +123,7 @@ impl EventHandler for EvHandler {
         info!("Starting...");
 
         let version = env!("CARGO_PKG_VERSION");
-        ctx.set_activity(Some(ActivityData::playing(&format!("v{}", version))));
+        ctx.set_activity(Some(ActivityData::playing(format!("v{version}"))));
 
         info!("Running ichiyoAI v{}", version);
         info!(
