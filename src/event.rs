@@ -162,10 +162,10 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     };
 
     // first is newest, last is oldest
-    let mut msgs = [msg]
-        .into_iter()
-        .chain(ChainedMessages::new(msg))
+    use tokio_stream::StreamExt as _;
+    let mut msgs = ChainedMessages::new(ctx.clone(), msg)
         .map(|m| {
+
             if m.is_own(ctx) {
                 let (content, _) = m.content.rsplit_once("\n\n").unwrap();
                 let content = content.to_owned();
@@ -177,7 +177,8 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
                 ichiyo_ai::Message::User { content }
             }
         })
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+        .await;
 
     // first is oldest, last is newest
     msgs.reverse();
@@ -223,23 +224,96 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     ci.create_followup(ctx, cirf).await.unwrap();
 }
 
-struct ChainedMessages<'a> {
-    origin: &'a Message,
-}
+use cm::ChainedMessages;
+mod cm {
+    use core::future::Future;
+    use core::pin::Pin;
+    use core::task::ready;
+    use core::task::Context;
+    use core::task::Poll;
+    use serenity::model::channel::Message;
+    use tokio_stream::Stream;
 
-impl<'a> ChainedMessages<'a> {
-    fn new(origin: &'a Message) -> Self {
-        Self { origin }
+    pub struct ChainedMessages {
+        ctx: serenity::client::Context,
+        state: State,
     }
-}
 
-impl<'a> Iterator for ChainedMessages<'a> {
-    type Item = &'a Message;
+    enum State {
+        Got { cursor: (u64, u64) },
+        Pending { future: Pin<Box<GetMessage>> },
+        Terminal,
+    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let msg = self.origin.referenced_message.as_ref()?;
-        self.origin = &**msg;
-        Some(self.origin)
+    type GetMessage = dyn Future<Output = serenity::Result<Message>> + Send + Sync;
+
+    impl ChainedMessages {
+        pub fn new(ctx: serenity::client::Context, msg: &Message) -> Self {
+            let channel_id = msg.channel_id.get();
+            let message_id = msg.id.get();
+
+            let cursor = (channel_id, message_id);
+            let state = State::Got { cursor };
+
+            Self { ctx, state }
+        }
+    }
+
+    impl Stream for ChainedMessages {
+        type Item = Message;
+
+        fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+            dbg!({
+                match &self.state {
+                    State::Got { .. } => "Got",
+                    State::Pending { .. } => "Pending",
+                    State::Terminal => "Terminal",
+                }
+            });
+
+            let (new, ret) = match &mut self.state {
+                State::Got { cursor } => {
+                    let (channel_id, message_id) = *cursor;
+
+                    let ctx = self.ctx.clone();
+                    let mut future = Box::pin(async move {
+                        ctx.http
+                            .get_message(channel_id.into(), message_id.into())
+                            .await
+                    });
+
+                    let _ = future.as_mut().poll(cx);
+
+                    (State::Pending { future }, Poll::Pending)
+                }
+                State::Pending { future } => {
+                    let msg = ready!(future.as_mut().poll(cx));
+                    if let Err(e) = &msg {
+                        println!("{e}");
+                    }
+
+                    let msg = msg.unwrap();
+
+                    let state = match msg.referenced_message.as_ref() {
+                        None => State::Terminal,
+                        Some(m) => {
+                            let channel_id = m.channel_id.get();
+                            let message_id = m.id.get();
+
+                            let cursor = (channel_id, message_id);
+
+                            State::Got { cursor }
+                        }
+                    };
+
+                    (state, Poll::Ready(Some(msg)))
+                }
+                State::Terminal => (State::Terminal, Poll::Ready(None)),
+            };
+
+            self.state = new;
+            ret
+        }
     }
 }
 
