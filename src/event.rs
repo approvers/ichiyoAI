@@ -272,6 +272,15 @@ impl EventHandler for EvHandler {
             "Connected!: {name}(Id:{id})",
             name = self_bot.user.name,
             id = self_bot.user.id
-        )
+        );
+
+        let guild_id = crate::envs().guild_id;
+        let map = serde_json::from_str::<serde_json::Value>(include_str!("commands.json")).unwrap();
+
+        let commands = ctx
+            .http
+            .create_guild_commands(guild_id.into(), &map)
+            .await
+            .unwrap();
     }
 }
