@@ -206,6 +206,8 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     };
 
     let content = {
+        let link = msg.link();
+
         let (msg, meta) = result.unwrap();
 
         let content = msg.content();
@@ -215,7 +217,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
             by,
         } = meta;
 
-        format!("{content}\n\n`{by}` | ¥{price_yen:.2} | {tokens} tokens")
+        format!("{content}\n\n**`{by}`** | ¥{price_yen:.2} | {tokens} tokens | from {link}")
     };
 
     assert!(content.len() < 2000);
@@ -295,7 +297,10 @@ mod cm {
                     let msg = msg.unwrap();
 
                     let state = match msg.referenced_message.as_ref() {
-                        None => State::Terminal,
+                        None => match extract_reference_from_url(&msg.content) {
+                            Some(cursor) => State::Got { cursor },
+                            None => State::Terminal,
+                        }
                         Some(m) => {
                             let channel_id = m.channel_id.get();
                             let message_id = m.id.get();
@@ -314,6 +319,19 @@ mod cm {
             self.state = new;
             ret
         }
+    }
+
+    // HACK: 取り急ぎ実装したが, best practice かは知らない
+    fn extract_reference_from_url(content: impl AsRef<str>) -> Option<(u64, u64)> {
+        let content = content.as_ref();
+
+        let (_, ids) = content.rsplit_once("https://discord.com/channels/@me/")?;
+        let (channel_id, message_id) = ids.split_once('/')?;
+
+        let channel_id = channel_id.parse().ok()?;
+        let message_id = message_id.parse().ok()?;
+
+        Some((channel_id, message_id))
     }
 }
 
