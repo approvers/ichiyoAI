@@ -741,6 +741,7 @@ dependencies = [
  "serde_json",
  "serenity",
  "tokio",
+ "tokio-stream",
  "tracing",
  "tracing-subscriber",
  "typed-builder",
