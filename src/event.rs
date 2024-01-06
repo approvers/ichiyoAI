@@ -2,7 +2,7 @@ use anyhow::Context as _;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
 use serenity::builder::CreateInteractionResponseFollowup;
-use serenity::builder::CreateInteractionResponseMessage;
+
 use serenity::model::application::CommandDataOptionValue;
 use serenity::model::application::CommandType;
 use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
@@ -11,7 +11,6 @@ use serenity::{
     async_trait,
     client::{Context, EventHandler},
     gateway::ActivityData,
-    model::channel::Message,
     model::gateway::Ready,
 };
 use tracing::info;
@@ -165,7 +164,6 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     use tokio_stream::StreamExt as _;
     let mut msgs = ChainedMessages::new(ctx.clone(), msg)
         .map(|m| {
-
             if m.is_own(ctx) {
                 let (content, _) = m.content.rsplit_once("\n\n").unwrap();
                 let content = content.to_owned();
@@ -300,7 +298,7 @@ mod cm {
                         None => match extract_reference_from_url(&msg.content) {
                             Some(cursor) => State::Got { cursor },
                             None => State::Terminal,
-                        }
+                        },
                         Some(m) => {
                             let channel_id = m.channel_id.get();
                             let message_id = m.id.get();
