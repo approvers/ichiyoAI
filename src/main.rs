@@ -28,13 +28,13 @@ async fn main() -> anyhow::Result<()> {
     dotenv().ok();
     let envs = crate::envs();
 
-    let _guard = sentry::init((
-        &*envs.sentry_dsn,
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            ..Default::default()
-        },
-    ));
+    // let _guard = sentry::init((
+    //     &*envs.sentry_dsn,
+    //     sentry::ClientOptions {
+    //         release: sentry::release_name!(),
+    //         ..Default::default()
+    //     },
+    // ));
 
     tracing_subscriber::fmt().compact().init();
 
