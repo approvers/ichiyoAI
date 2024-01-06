@@ -1,7 +1,7 @@
 use anyhow::Context as _;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
-use serenity::builder::CreateInteractionResponse;
+use serenity::builder::CreateInteractionResponseFollowup;
 use serenity::builder::CreateInteractionResponseMessage;
 use serenity::model::application::CommandDataOptionValue;
 use serenity::model::application::CommandType;
@@ -130,12 +130,11 @@ async fn image(ctx: &Context, ci: &CommandInteraction) {
         (content, [(filename, filedata)])
     };
 
-    let cirm = CreateInteractionResponseMessage::default()
+    let cirf = CreateInteractionResponseFollowup::default()
         .content(content)
         .files(files.map(|(name, raw)| CreateAttachment::bytes(raw, name)));
 
-    let cir = CreateInteractionResponse::Message(cirm);
-    ci.create_response(ctx, cir).await.unwrap()
+    ci.create_followup(ctx, cirf).await.unwrap();
 }
 
 async fn completion(ctx: &Context, ci: &CommandInteraction) {
@@ -220,9 +219,8 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
 
     assert!(content.len() < 2000);
 
-    let cirm = CreateInteractionResponseMessage::default().content(content);
-    let cir = CreateInteractionResponse::Message(cirm);
-    ci.create_response(ctx, cir).await.unwrap()
+    let cirf = CreateInteractionResponseFollowup::default().content(content);
+    ci.create_followup(ctx, cirf).await.unwrap();
 }
 
 struct ChainedMessages<'a> {
@@ -255,6 +253,8 @@ impl EventHandler for EvHandler {
         if ci.user.bot || ci.user.system {
             return;
         }
+
+        ci.defer(&ctx).await.unwrap();
 
         match ci.data.kind {
             CommandType::ChatInput => image(&ctx, ci).await,
