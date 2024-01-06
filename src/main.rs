@@ -25,6 +25,7 @@ pub fn envs() -> &'static IchiyoAiEnv {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenv().ok();
     let envs = crate::envs();
 
     let _guard = sentry::init((
@@ -35,7 +36,6 @@ async fn main() -> anyhow::Result<()> {
         },
     ));
 
-    dotenv().ok();
     tracing_subscriber::fmt().compact().init();
 
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
