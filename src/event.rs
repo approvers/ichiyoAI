@@ -163,7 +163,9 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     };
 
     // first is newest, last is oldest
-    let mut msgs = ChainedMessages::new(msg)
+    let mut msgs = [msg]
+        .into_iter()
+        .chain(ChainedMessages::new(msg))
         .map(|m| {
             if m.is_own(ctx) {
                 let (content, _) = m.content.rsplit_once("\n\n").unwrap();
