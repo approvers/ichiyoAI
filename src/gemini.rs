@@ -39,7 +39,10 @@ impl super::Completion for Gemini {
         let res = res.bytes().await?;
         let res = serde_json::from_slice::<Response>(&res)?;
 
-        let [candidate] = res.candidates;
+        let Some([candidate]) = res.candidates else {
+            let reason = res.prompt_feedback.block_reason;
+            anyhow::bail!("prompt blocked! reason: {reason:?}");
+        };
 
         if candidate.finish_reason != FinishReason::Stop {
             anyhow::bail!("unexpected finish reason: {}", candidate.finish_reason);
@@ -124,8 +127,21 @@ impl<'a> From<&'a super::Message> for Content<'a> {
 struct Response<'a> {
     // FACT: supported only `1`
     #[serde(borrow)]
-    candidates: [Candidate<'a>; 1],
-    // prompt_feedback: PromptFeedback,
+    candidates: Option<[Candidate<'a>; 1]>,
+    prompt_feedback: PromptFeedback,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PromptFeedback {
+    block_reason: Option<BlockReason>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum BlockReason {
+    Safety,
+    Other,
 }
 
 #[derive(serde::Deserialize)]
