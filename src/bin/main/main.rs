@@ -1,15 +1,11 @@
 extern crate alloc;
 
-use anyhow::Context;
-use dotenvy::dotenv;
-use event::EvHandler;
-use serde::{Deserialize, Serialize};
-use serenity::{model::gateway::GatewayIntents, Client};
-use std::sync::OnceLock;
+use anyhow::Context as _;
+use serenity::model::gateway::GatewayIntents;
 
 mod event;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct IchiyoAiEnv {
     pub discord_api_token: String,
     pub openai_api_key: String,
@@ -20,14 +16,14 @@ pub struct IchiyoAiEnv {
 }
 
 pub fn envs() -> &'static IchiyoAiEnv {
-    static CACHE: OnceLock<IchiyoAiEnv> = OnceLock::new();
+    static CACHE: std::sync::OnceLock<IchiyoAiEnv> = std::sync::OnceLock::new();
 
     CACHE.get_or_init(|| envy::from_env().expect("Failed to load enviroment variables"))
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv().ok();
+    dotenvy::dotenv().ok();
     let envs = crate::envs();
 
     // let _guard = sentry::init((
@@ -41,8 +37,8 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt().compact().init();
 
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = Client::builder(&envs.discord_api_token, intents)
-        .event_handler(EvHandler)
+    let mut client = serenity::Client::builder(&envs.discord_api_token, intents)
+        .event_handler(event::EvHandler)
         .await
         .context("Failed to create discord client")?;
 
