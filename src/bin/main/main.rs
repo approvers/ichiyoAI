@@ -1,8 +1,5 @@
 extern crate alloc;
 
-use anyhow::Context as _;
-use serenity::model::gateway::GatewayIntents;
-
 mod event;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -22,8 +19,11 @@ pub fn envs() -> &'static IchiyoAiEnv {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+async fn main() {
+    if let Err(cause) = dotenvy::dotenv() {
+        tracing::warn!(%cause, "Failed to load dotenv");
+    }
+
     let envs = crate::envs();
 
     tracing_subscriber::fmt().compact().init();
@@ -45,15 +45,19 @@ async fn main() -> anyhow::Result<()> {
         tracing::warn!("Sentry isn't initialized");
     }
 
-    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
-    let mut client = serenity::Client::builder(&envs.discord_api_token, intents)
+    let intents = serenity::model::gateway::GatewayIntents::GUILD_MESSAGES
+        | serenity::model::gateway::GatewayIntents::MESSAGE_CONTENT;
+
+    let result = serenity::Client::builder(&envs.discord_api_token, intents)
         .event_handler(event::EvHandler)
-        .await
-        .context("Failed to create discord client")?;
+        .await;
 
-    if let Err(why) = client.start().await {
-        panic!("Failed to starting ichiyoAI: {}", why)
+    let mut client = match result {
+        Ok(ret) => ret,
+        Err(cause) => return tracing::error!(%cause, "Failed to create discord client!"),
+    };
+
+    if let Err(cause) = client.start().await {
+        return tracing::error!(%cause, "Failed to starting ichiyoAI!");
     }
-
-    Ok(())
 }
