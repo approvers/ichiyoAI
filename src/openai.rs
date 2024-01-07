@@ -6,7 +6,7 @@ pub struct OpenAi<Model> {
 }
 
 trait Model {
-    fn name() -> &'static str;
+    const NAME: &'static str;
     fn price_yen(req_tokens: usize, res_tokens: usize) -> f64;
 }
 
@@ -15,9 +15,7 @@ macro_rules! define_model {
         $vis struct $name;
 
         impl Model for $name {
-            fn name() -> &'static str {
-                $model
-            }
+            const NAME: &'static str = $model;
 
             fn price_yen(req_tokens: usize, res_tokens: usize) -> f64 {
                 // あくまでも概算なので, 浮動小数点数程度の精度で十分
@@ -47,7 +45,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
         messages: &[super::Message],
     ) -> anyhow::Result<(super::Message, super::Metadata)> {
         let req = Request {
-            model: Model::name(),
+            model: Model::NAME,
             messages: messages.iter().map(Into::into).collect(),
         };
 
@@ -95,7 +93,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
             anyhow::bail!("Failed to deserialize response");
         }
 
-        if res.model != Model::name() {
+        if res.model != Model::NAME {
             tracing::error!(?res.model, "Unexpected model");
             anyhow::bail!("Failed to deserialize response");
         }
@@ -114,7 +112,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
         let metadata = super::Metadata {
             tokens: res.usage.total_tokens,
             price_yen: Model::price_yen(res.usage.prompt_tokens, res.usage.completion_tokens),
-            by: Model::name(),
+            by: Model::NAME,
         };
 
         Ok((super::Message::Model { content }, metadata))
