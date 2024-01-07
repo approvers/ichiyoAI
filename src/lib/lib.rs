@@ -14,6 +14,20 @@ impl Message {
             Self::Model { content, .. } => content,
         }
     }
+
+    pub fn is_user(&self) -> bool {
+        match self {
+            Self::User { .. } => true,
+            Self::Model { .. } => false,
+        }
+    }
+
+    pub fn is_model(&self) -> bool {
+        match self {
+            Self::User { .. } => false,
+            Self::Model { .. } => true,
+        }
+    }
 }
 
 pub struct CMetadata {

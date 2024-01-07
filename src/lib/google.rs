@@ -37,6 +37,12 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
         &self,
         messages: &[super::Message],
     ) -> Result<(super::Message, super::CMetadata), alloc::borrow::Cow<'static, str>> {
+        if messages.first().map(super::Message::is_user) != Some(true)
+            || messages.last().map(super::Message::is_user) != Some(true)
+        {
+            return Err("First and last message must be from user".into());
+        }
+
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
             ..Default::default()
