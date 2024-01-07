@@ -1,6 +1,6 @@
-use anyhow::Result;
 use anyhow::bail;
 use anyhow::Context as _;
+use anyhow::Result;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
 use serenity::builder::CreateInteractionResponse;
