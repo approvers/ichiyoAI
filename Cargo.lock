@@ -35,7 +35,6 @@ dependencies = [
  "serde",
 ]
 
-[[package]]
 name = "async-trait"
 version = "0.1.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
