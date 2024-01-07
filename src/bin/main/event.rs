@@ -11,12 +11,11 @@ use serenity::model::application::CommandType;
 use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
 use serenity::model::gateway::Ready;
 use serenity::model::user::User;
-use std::time::Duration;
 
 type Result<T> = core::result::Result<T, alloc::borrow::Cow<'static, str>>;
 
 // DaLL-E & ChatGPT で使用するタイムアウト時間の定数
-pub static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
+pub const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(60);
 
 #[tracing::instrument(skip_all)]
 pub async fn is_sponsor(ctx: &Context, user: &User) -> Result<bool> {
