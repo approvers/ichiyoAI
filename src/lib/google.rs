@@ -94,7 +94,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
 
         let Some([candidate]) = res.candidates else {
             let reason = res.prompt_feedback.block_reason;
-            return Err("Prompt blocked! reason: {reason:?}".into());
+            return Err(format!("Prompt blocked! reason: {reason:?}").into());
         };
 
         if candidate.finish_reason != FinishReason::Stop {
