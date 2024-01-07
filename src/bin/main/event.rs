@@ -255,7 +255,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     };
 
     let cirf = CreateInteractionResponseFollowup::default().content(content);
-    let _ = ci.create_followup(ctx, cirf).await.map_err(|cause| {
+    ci.create_followup(ctx, cirf).await.map_err(|cause| {
         tracing::error!(?cause, "Failed to create interaction response");
         "Failed to create interaction response"
     })?;
