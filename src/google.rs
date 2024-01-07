@@ -1,19 +1,37 @@
 // ref: https://ai.google.dev/api/rest/v1beta/models/generateContent
-pub struct Gemini {
+pub struct Google<Model> {
     http: reqwest::Client,
     token: String,
+    model: core::marker::PhantomData<Model>,
 }
 
-impl Gemini {
+trait Model {
+    const NAME: &'static str;
+}
+
+macro_rules! define_model {
+    ($vis:vis $name:ident : $model:expr) => {
+        $vis struct $name;
+
+        impl Model for $name {
+            const NAME: &'static str = $model;
+        }
+    };
+}
+
+define_model!(pub GeminiPro: "gemini-pro");
+
+impl<Model> Google<Model> {
     pub fn new(token: impl AsRef<str>) -> Self {
         Self {
             http: reqwest::Client::new(),
             token: token.as_ref().to_owned(),
+            model: core::marker::PhantomData,
         }
     }
 }
 
-impl super::Completion for Gemini {
+impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
     #[tracing::instrument(skip_all)]
     async fn next(
         &self,
@@ -22,6 +40,11 @@ impl super::Completion for Gemini {
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
         };
+
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
+            Model::NAME,
+        );
 
         let raw = serde_json::to_vec(&req).map_err(|cause| {
             tracing::error!(?cause, "Failed to serialize request");
@@ -32,7 +55,7 @@ impl super::Completion for Gemini {
 
         let res = self
             .http
-            .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent")
+            .post(url)
             .header(reqwest::header::HeaderName::from_static("x-goog-api-key"), &self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .body(body)
@@ -99,9 +122,9 @@ impl super::Completion for Gemini {
             .collect();
 
         let metadata = super::Metadata {
-            tokens: count_tokens(&self.http, &self.token, contents).await?,
+            tokens: count_tokens::<Model>(&self.http, &self.token, contents).await?,
             price_yen: 0.0,
-            by: "genimi-pro",
+            by: Model::NAME,
         };
 
         Ok((super::Message::Model { content }, metadata))
@@ -243,7 +266,7 @@ impl<'de> serde::de::Visitor<'de> for FinishReasonVisitor {
 }
 
 #[tracing::instrument(skip_all)]
-async fn count_tokens(
+async fn count_tokens<Model: self::Model + Send + Sync>(
     client: &reqwest::Client,
     token: &str,
     contents: Vec<Content<'_>>,
@@ -259,6 +282,11 @@ async fn count_tokens(
         total_tokens: usize,
     }
 
+    let url = format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:countTokens",
+        Model::NAME,
+    );
+
     let req = Request { contents };
     let raw = serde_json::to_vec(&req).map_err(|cause| {
         tracing::error!(?cause, "Failed to serialize request");
@@ -267,7 +295,7 @@ async fn count_tokens(
     let body = reqwest::Body::from(raw);
 
     let res = client
-        .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens")
+        .post(url)
         .header(
             reqwest::header::HeaderName::from_static("x-goog-api-key"),
             token,

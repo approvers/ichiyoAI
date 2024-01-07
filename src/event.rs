@@ -228,7 +228,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         }
         Modelname::GeminiPro => {
             let token = &crate::envs().google_ai_api_key;
-            let engine = ichiyo_ai::Gemini::new(token);
+            let engine = ichiyo_ai::GoogleGeminiPro::new(token);
 
             engine.next(&msgs).await
         }
