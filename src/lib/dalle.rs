@@ -33,6 +33,7 @@ impl<Model> OpenAi<Model> {
 }
 
 impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
+    #[tracing::instrument(skip_all)]
     async fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
@@ -45,30 +46,52 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
             response_format: "b64_json",
         };
 
+        let body = serde_json::to_vec(&req).map_err(|cause| {
+            tracing::error!(?cause, "Failed to serialize request");
+            anyhow::anyhow!("Failed to serialize request")
+        })?;
+
         let res = self
             .http
             .post("https://api.openai.com/v1/images/generations")
             .bearer_auth(&self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(serde_json::to_vec(&req)?)
+            .body(body)
             .send()
-            .await?
-            .error_for_status()?;
+            .await
+            .map_err(|cause| {
+                tracing::error!(?cause, "Failed to send request");
+                anyhow::anyhow!("Failed to send request")
+            })?;
 
         if res.status() != reqwest::StatusCode::OK {
-            anyhow::bail!("unexpected status code: {}", res.status());
+            tracing::error!(res.status = ?res.status(), "Unexpected status code");
         }
 
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<Response>(&res)?;
+        let res = res.bytes().await.map_err(|cause| {
+            tracing::error!(?cause, "Failed to read response");
+            anyhow::anyhow!("Failed to read response")
+        })?;
+
+        let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
+            tracing::error!(?cause, "Failed to deserialize response");
+
+            if let Ok(body) = serde_json::from_slice::<serde_json::Value>(&res) {
+                tracing::error!(%body, "Actual response (recognizable as JSON)");
+            }
+
+            anyhow::anyhow!("Failed to deserialize response")
+        })?;
 
         let [image] = res.data;
-        assert!(image.b64_json.is_png());
+        if !image.b64_json.is_png() {
+            tracing::warn!("Received image is not PNG");
+        }
 
         let image = super::Image {
             raw: image.b64_json.raw,
             prompt: image.revised_prompt.unwrap_or(prompt).to_owned(),
-            ext: super::ImageExt::Png,
+            ext: super::ImageExt::Png, // FIXME: maybe it's not PNG!
         };
 
         let metadata = super::IMetadata { model: Model::NAME };
