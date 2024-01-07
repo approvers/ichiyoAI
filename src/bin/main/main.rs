@@ -1,3 +1,5 @@
+extern crate alloc;
+
 use anyhow::Context;
 use dotenvy::dotenv;
 use event::EvHandler;

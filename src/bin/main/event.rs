@@ -1,33 +1,37 @@
-use anyhow::bail;
-use anyhow::Result;
 use once_cell::sync::OnceCell;
+use serenity::async_trait;
 use serenity::builder::CreateAttachment;
+use serenity::builder::CreateEmbed;
 use serenity::builder::CreateInteractionResponse;
 use serenity::builder::CreateInteractionResponseFollowup;
 use serenity::builder::CreateInteractionResponseMessage;
+use serenity::client::{Context, EventHandler};
+use serenity::gateway::ActivityData;
 use serenity::model::application::CommandDataOptionValue;
 use serenity::model::application::CommandType;
 use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
+use serenity::model::gateway::Ready;
 use serenity::model::user::User;
-use serenity::{
-    async_trait,
-    client::{Context, EventHandler},
-    gateway::ActivityData,
-    model::gateway::Ready,
-};
-
 use std::time::Duration;
+
+type Result<T> = core::result::Result<T, alloc::borrow::Cow<'static, str>>;
 
 // DaLL-E & ChatGPT で使用するタイムアウト時間の定数
 pub static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 
+#[tracing::instrument(skip_all)]
 pub async fn is_sponsor(ctx: &Context, user: &User) -> Result<bool> {
     let envs = crate::envs();
 
     let guild_id = envs.guild_id;
     let role_id = envs.sponsor_role_id;
 
-    Ok(user.has_role(ctx, guild_id, role_id).await?)
+    user.has_role(ctx, guild_id, role_id)
+        .await
+        .map_err(|cause| {
+            tracing::error!(?cause, "Failed to get sponsor role");
+            "Failed to get sponsor role".into()
+        })
 }
 
 pub struct EvHandler;
@@ -87,21 +91,19 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         Some("dall-e-2") => Modelname::DallE2,
         Some("dall-e-3") => Modelname::DallE3,
 
-        name => bail!("Unexpected `model`: {}", name.unwrap_or("")),
+        name => return Err(format!("Unexpected `model`: {}", name.unwrap_or("")).into()),
     };
 
-    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or_else(|cause| {
-        tracing::warn!(?cause, "Failed to get sponsor role");
-        false
-    });
-
+    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or(false);
     match (is_sponsor, &modelname) {
-        (false, Modelname::DallE3) => bail!("You must be a sponsor to use model \"DALL-E 3\""),
+        (false, Modelname::DallE3) => {
+            return Err("You must be a sponsor to use model \"DALL-E 3\"".into())
+        }
         _ => (/* means for all users */),
     }
 
     let prompt = match opts.prompt {
-        Some("") | None => bail!("Unexpected empty `prompt`"),
+        Some("") | None => return Err("Unexpected empty `prompt`".into()),
         Some(prompt) => prompt,
     };
 
@@ -122,10 +124,7 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     };
 
     let (content, files) = {
-        let (img, meta) = result.map_err(|cause| {
-            tracing::error!(?cause, "Failed to create image");
-            anyhow::anyhow!("Failed to create image")
-        })?;
+        let (img, meta) = result?;
 
         let ichiyo_ai::Image { raw, prompt, ext } = img;
         let ichiyo_ai::IMetadata { model } = meta;
@@ -144,7 +143,7 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
 
     ci.create_followup(ctx, cirf).await.map_err(|cause| {
         tracing::error!(?cause, "Failed to create interaction response");
-        anyhow::anyhow!("Failed to create interaction response")
+        "Failed to create interaction response"
     })?;
 
     Ok(())
@@ -165,25 +164,21 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
 
         name => {
             tracing::error!(?name, "Unexpected command name");
-            bail!("Unexpected command name: {name}");
+            return Err(format!("Unexpected command name: {name}").into());
         }
     };
 
-    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or_else(|cause| {
-        tracing::warn!(?cause, "Failed to get sponsor role");
-        false
-    });
-
+    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or(false);
     match (is_sponsor, &modelname) {
         (false, Modelname::GPT4Turbo) => {
-            bail!("You must be a sponsor to use model \"GPT-4 Turbo\"")
+            return Err("You must be a sponsor to use model \"GPT-4 Turbo\"".into())
         }
         _ => (/* means for all users */),
     }
 
     let Some(ResolvedTarget::Message(msg)) = ci.data.target() else {
         tracing::error!(ci.data.target = ?ci.data.target(), "Unexpected target");
-        bail!("Failed to recognize interaction");
+        return Err("Failed to recognize interaction".into());
     };
 
     // first is newest, last is oldest
@@ -237,10 +232,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     let content = {
         let link = msg.link();
 
-        let (msg, meta) = result.map_err(|cause| {
-            tracing::error!(?cause, "Failed to complete");
-            anyhow::anyhow!("Failed to complete")
-        })?;
+        let (msg, meta) = result?;
 
         let content = msg.content();
         let ichiyo_ai::CMetadata {
@@ -255,7 +247,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     let cirf = CreateInteractionResponseFollowup::default().content(content);
     let _ = ci.create_followup(ctx, cirf).await.map_err(|cause| {
         tracing::error!(?cause, "Failed to create interaction response");
-        anyhow::anyhow!("Failed to create interaction response")
+        "Failed to create interaction response"
     })?;
 
     Ok(())
@@ -431,11 +423,13 @@ impl EventHandler for EvHandler {
             }
         };
 
-        if let Err(cause) = result {
-            tracing::error!(?cause, "Failed to process interaction");
+        if let Err(reason) = result {
+            let ce = CreateEmbed::default()
+                .title("Error")
+                .description(reason)
+                .color(0xff0000);
 
-            let cirf =
-                CreateInteractionResponseFollowup::default().content(format!("```{cause:?}```"));
+            let cirf = CreateInteractionResponseFollowup::default().add_embed(ce);
             let result = ci.create_followup(&ctx, cirf).await;
 
             if let Err(cause) = result {
