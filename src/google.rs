@@ -56,7 +56,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
         let res = self
             .http
             .post(url)
-            .header(reqwest::header::HeaderName::from_static("x-goog-api-key"), &self.token)
+            .header("X-Goog-API-Key", &self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
             .body(body)
             .send()
@@ -296,10 +296,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
 
     let res = client
         .post(url)
-        .header(
-            reqwest::header::HeaderName::from_static("x-goog-api-key"),
-            token,
-        )
+        .header("X-Goog-API-Key", token)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(body)
         .send()
