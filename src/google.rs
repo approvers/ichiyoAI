@@ -39,6 +39,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
     ) -> anyhow::Result<(super::Message, super::Metadata)> {
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
+            ..Default::default()
         };
 
         let url = format!(
@@ -136,12 +137,76 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
 struct Request<'a> {
     contents: Vec<Content<'a>>,
     // tools: Vec<Tool>,
-    // safety_settings: Vec<SafetySetting>,
-    // generation_config: GenerationConfig,
+    safety_settings: Vec<SafetySetting>,
+    generation_config: GenerationConfig,
+}
+
+impl<'a> Default for Request<'a> {
+    fn default() -> Self {
+        // NOTE: they are exhaustive
+        #[rustfmt::skip]
+        let safety_settings = [
+            (HarmCategory::Harassment,       HarmBlockThreshold::None),
+            (HarmCategory::HateSpeech,       HarmBlockThreshold::None),
+            (HarmCategory::SexuallyExplicit, HarmBlockThreshold::None),
+            (HarmCategory::DangerousContent, HarmBlockThreshold::None),
+        ]
+        .into_iter()
+        .map(|(category, threshold)| SafetySetting {
+            category,
+            threshold,
+        })
+        .collect();
+
+        Self {
+            contents: vec![],
+            // tools: vec![],
+            safety_settings,
+            generation_config: GenerationConfig::with_max_tokens(/* HACK */ 500),
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SafetySetting {
+    category: HarmCategory,
+    threshold: HarmBlockThreshold,
+}
+
+#[derive(Debug, serde::Serialize)]
+enum HarmBlockThreshold {
+    #[serde(rename = "HARM_BLOCK_THRESHOLD_UNSPECIFIED")]
+    Unspecified,
+    #[serde(rename = "BLOCK_LOW_AND_ABOVE")]
+    LowAndAbrove,
+    #[serde(rename = "BLOCK_MEDIUM_AND_ABOVE")]
+    MediumAndAbove,
+    #[serde(rename = "BLOCK_ONLY_HIGH")]
+    OnlyHigh,
+    #[serde(rename = "BLOCK_NONE")]
+    None,
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GenerationConfig {
+    // stop_sequences: Vec<&'a str>,
+    // candidate_count: usize,
+    max_output_tokens: usize,
+    // temperature: f64,
+    // top_p: f64,
+    // top_k: usize,
+}
+
+impl GenerationConfig {
+    fn with_max_tokens(max_output_tokens: usize) -> Self {
+        Self { max_output_tokens }
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 #[serde(tag = "role")]
 enum Content<'a> {
     User { parts: Vec<Part<'a>> },
@@ -184,6 +249,7 @@ struct Response<'a> {
 #[serde(rename_all = "camelCase")]
 struct PromptFeedback {
     block_reason: Option<BlockReason>,
+    safety_ratings: Vec<SafetyRating>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -191,6 +257,50 @@ struct PromptFeedback {
 enum BlockReason {
     Safety,
     Other,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct SafetyRating {
+    category: HarmCategory,
+    probability: HarmProbability,
+    // blocked: Option<bool>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+enum HarmCategory {
+    #[serde(rename = "HARM_CATEGORY_UNSPECIFIED")]
+    Unspecified,
+    #[serde(rename = "HARM_CATEGORY_DEROGATORY")]
+    Derogatory,
+    #[serde(rename = "HARM_CATEGORY_TOXICITY")]
+    Toxicity,
+    #[serde(rename = "HARM_CATEGORY_VIOLENCE")]
+    Violence,
+    #[serde(rename = "HARM_CATEGORY_SEXUAL")]
+    Sexual,
+    #[serde(rename = "HARM_CATEGORY_MEDICAL")]
+    Medical,
+    #[serde(rename = "HARM_CATEGORY_DANGEROUS")]
+    Dangerous,
+    #[serde(rename = "HARM_CATEGORY_HARASSMENT")]
+    Harassment,
+    #[serde(rename = "HARM_CATEGORY_HATE_SPEECH")]
+    HateSpeech,
+    #[serde(rename = "HARM_CATEGORY_SEXUALLY_EXPLICIT")]
+    SexuallyExplicit,
+    #[serde(rename = "HARM_CATEGORY_DANGEROUS_CONTENT")]
+    DangerousContent,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum HarmProbability {
+    #[serde(rename = "HARM_PROBABILITY_UNSPECIFIED")]
+    Unspecified,
+    Negligible,
+    Low,
+    Medium,
+    High,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -206,23 +316,24 @@ struct Candidate<'a> {
     // index: usize,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 enum FinishReason {
     Stop,
-    Maxtokens,
+    MaxTokens,
     Safety,
     Recitation,
     Other,
 }
 
-#[rustfmt::skip]
 impl core::fmt::Display for FinishReason {
+    #[rustfmt::skip]
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Stop => {
                 f.write_str("Natural stop point of the model or provided stop sequence")
             },
-            Self::Maxtokens => {
+            Self::MaxTokens => {
                 f.write_str("The maximum number of tokens as specified in the request was reached")
             },
             Self::Safety => {
@@ -234,33 +345,6 @@ impl core::fmt::Display for FinishReason {
             Self::Other => {
                 f.write_str("Unknown reason")
             },
-        }
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for FinishReason {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        deserializer.deserialize_str(FinishReasonVisitor)
-    }
-}
-
-struct FinishReasonVisitor;
-
-impl<'de> serde::de::Visitor<'de> for FinishReasonVisitor {
-    type Value = FinishReason;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("a finish reason")
-    }
-
-    fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
-        match value {
-            "STOP" => Ok(FinishReason::Stop),
-            "MAX_TOKENS" => Ok(FinishReason::Maxtokens),
-            "SAFETY" => Ok(FinishReason::Safety),
-            "RECITATION" => Ok(FinishReason::Recitation),
-            "OTHER" => Ok(FinishReason::Other),
-            _ => Err(E::custom(format!("unknown finish reason: {}", value))),
         }
     }
 }
