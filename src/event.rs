@@ -1,8 +1,11 @@
+use anyhow::Result;
+use anyhow::bail;
 use anyhow::Context as _;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
+use serenity::builder::CreateInteractionResponse;
 use serenity::builder::CreateInteractionResponseFollowup;
-
+use serenity::builder::CreateInteractionResponseMessage;
 use serenity::model::application::CommandDataOptionValue;
 use serenity::model::application::CommandType;
 use serenity::model::application::{CommandInteraction, Interaction, ResolvedTarget};
@@ -20,15 +23,13 @@ use std::time::Duration;
 // DaLL-E & ChatGPT で使用するタイムアウト時間の定数
 pub static TIMEOUT_DURATION: Duration = Duration::from_secs(180);
 
-pub async fn is_sponsor(ctx: &Context, user: &User) -> anyhow::Result<bool> {
+pub async fn is_sponsor(ctx: &Context, user: &User) -> Result<bool> {
     let envs = crate::envs();
 
     let guild_id = envs.guild_id;
     let role_id = envs.sponsor_role_id;
 
-    user.has_role(ctx, guild_id, role_id)
-        .await
-        .context("Failed to get sponsor role")
+    Ok(user.has_role(ctx, guild_id, role_id).await?)
 }
 
 pub struct EvHandler;
@@ -62,7 +63,7 @@ impl<'a> FromIterator<OptionsField<'a>> for Options<'a> {
     }
 }
 
-async fn image(ctx: &Context, ci: &CommandInteraction) {
+async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     enum Modelname {
         DallE2,
         DallE3,
@@ -84,19 +85,21 @@ async fn image(ctx: &Context, ci: &CommandInteraction) {
         Some("dall-e-2") => Modelname::DallE2,
         Some("dall-e-3") => Modelname::DallE3,
 
-        Some(name) => unreachable!("Unexpected model name: {:?}", name),
-        None => unreachable!("Model name is required"),
+        name => bail!("Unexpected `model`: {}", name.unwrap_or("")),
     };
 
-    match (is_sponsor(ctx, &ci.user).await.unwrap(), &modelname) {
-        (false, Modelname::DallE3) => panic!(),
+    let is_sponsor = is_sponsor(ctx, &ci.user)
+        .await
+        .context("Failed to get sponsor role")?;
+
+    match (is_sponsor, &modelname) {
+        (false, Modelname::DallE3) => bail!("You must be a sponsor to use model \"DALL-E 3\""),
         _ => (/* means for all users */),
     }
 
     let prompt = match opts.prompt {
-        Some("") => unreachable!("empty prompt is not allowed"),
+        Some("") | None => bail!("Unexpected empty `prompt`"),
         Some(prompt) => prompt,
-        None => unreachable!("prompt is required"),
     };
 
     use ichiyo_ai::Image as _;
@@ -116,7 +119,7 @@ async fn image(ctx: &Context, ci: &CommandInteraction) {
     };
 
     let (content, files) = {
-        let (img, meta) = result.unwrap();
+        let (img, meta) = result.context("Failed to create image")?;
 
         let ichiyo_ai::GeneratedImage { image, prompt, ext } = img;
         let ichiyo_ai::dalle::Metadata { model } = meta;
@@ -129,14 +132,22 @@ async fn image(ctx: &Context, ci: &CommandInteraction) {
         (content, [(filename, filedata)])
     };
 
+    if content.len() > 2000 {
+        bail!("Unexpected content length (too long): {}", content.len());
+    }
+
     let cirf = CreateInteractionResponseFollowup::default()
         .content(content)
         .files(files.map(|(name, raw)| CreateAttachment::bytes(raw, name)));
 
-    ci.create_followup(ctx, cirf).await.unwrap();
+    ci.create_followup(ctx, cirf)
+        .await
+        .context("Failed to create interaction response")?;
+
+    Ok(())
 }
 
-async fn completion(ctx: &Context, ci: &CommandInteraction) {
+async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     enum Modelname {
         GPT35Turbo,
         GPT4Turbo,
@@ -148,16 +159,22 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
         "Text (GPT-4 Turbo)" => Modelname::GPT4Turbo,
         "Text (Gemini Pro)" => Modelname::GeminiPro,
 
-        name => unreachable!("Unexpected model name: {:?}", name),
+        name => bail!("Unexpected command name: {name}"),
     };
 
-    match (is_sponsor(ctx, &ci.user).await.unwrap(), &modelname) {
-        (false, Modelname::GPT4Turbo) => panic!(),
+    let is_sponsor = is_sponsor(ctx, &ci.user)
+        .await
+        .context("Failed to get sponsor role")?;
+
+    match (is_sponsor, &modelname) {
+        (false, Modelname::GPT4Turbo) => {
+            bail!("You must be a sponsor to use model \"GPT-4 Turbo\"")
+        }
         _ => (/* means for all users */),
     }
 
     let Some(ResolvedTarget::Message(msg)) = ci.data.target() else {
-        unreachable!("Unexpected target: {:?}", ci.data.target());
+        bail!("Unexpected target: {:?}", ci.data.target());
     };
 
     // first is newest, last is oldest
@@ -165,8 +182,13 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     let mut msgs = ChainedMessages::new(ctx.clone(), msg)
         .map(|m| {
             if m.is_own(ctx) {
-                let (content, _) = m.content.rsplit_once("\n\n").unwrap();
-                let content = content.to_owned();
+                // remove metadata if possible
+                let content = m
+                    .content
+                    .rsplit_once("\n\n")
+                    .map(|(s, _)| s)
+                    .unwrap_or(&m.content)
+                    .to_owned();
 
                 ichiyo_ai::Message::Model { content }
             } else {
@@ -206,7 +228,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
     let content = {
         let link = msg.link();
 
-        let (msg, meta) = result.unwrap();
+        let (msg, meta) = result.context("Failed to complete")?;
 
         let content = msg.content();
         let ichiyo_ai::Metadata {
@@ -218,10 +240,18 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) {
         format!("{content}\n\n**`{by}`** | ¥{price_yen:.2} | {tokens} tokens | from {link}")
     };
 
-    assert!(content.len() < 2000);
+    // Internal Error
+    if content.len() > 2000 {
+        bail!("Unexpected content length (too long): {}", content.len());
+    }
 
     let cirf = CreateInteractionResponseFollowup::default().content(content);
-    ci.create_followup(ctx, cirf).await.unwrap();
+    let _ = ci
+        .create_followup(ctx, cirf)
+        .await
+        .context("Failed to create interaction response")?;
+
+    Ok(())
 }
 
 use cm::ChainedMessages;
@@ -233,6 +263,7 @@ mod cm {
     use core::task::Poll;
     use serenity::model::channel::Message;
     use tokio_stream::Stream;
+    use tracing::trace;
 
     pub struct ChainedMessages {
         ctx: serenity::client::Context,
@@ -245,7 +276,17 @@ mod cm {
         Terminal,
     }
 
-    type GetMessage = dyn Future<Output = serenity::Result<Message>> + Send + Sync;
+    impl State {
+        fn kind(&self) -> &'static str {
+            match self {
+                Self::Got { .. } => "Got",
+                Self::Pending { .. } => "Pending",
+                Self::Terminal => "Terminal",
+            }
+        }
+    }
+
+    type GetMessage = dyn Future<Output = Option<Message>> + Send + Sync;
 
     impl ChainedMessages {
         pub fn new(ctx: serenity::client::Context, msg: &Message) -> Self {
@@ -263,13 +304,10 @@ mod cm {
         type Item = Message;
 
         fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-            dbg!({
-                match &self.state {
-                    State::Got { .. } => "Got",
-                    State::Pending { .. } => "Pending",
-                    State::Terminal => "Terminal",
-                }
-            });
+            trace!(
+                "Polling on `ChainedMessages`: state = {}",
+                self.state.kind()
+            );
 
             let (new, ret) = match &mut self.state {
                 State::Got { cursor } => {
@@ -280,33 +318,38 @@ mod cm {
                         ctx.http
                             .get_message(channel_id.into(), message_id.into())
                             .await
+                            .ok()
                     });
 
+                    // FIXME: ↓ is this truthy true?
+
+                    // initial polling. don't worry that `.poll(cx)` returns `Poll::Ready(_)`
+                    // because if `Future` is already ready, `Future::poll(...)` will always return
+                    // `Poll::Ready(_)`. it means when `Self::poll_next(...)` is called in future,
+                    // then process it.
                     let _ = future.as_mut().poll(cx);
 
                     (State::Pending { future }, Poll::Pending)
                 }
-                State::Pending { future } => {
-                    let msg = ready!(future.as_mut().poll(cx));
-                    if let Err(e) = &msg {
-                        println!("{e}");
-                    }
+                State::Pending { future } => 'block: {
+                    let Some(msg) = ready!(future.as_mut().poll(cx)) else {
+                        break 'block (State::Terminal, Poll::Ready(None));
+                    };
 
-                    let msg = msg.unwrap();
-
-                    let state = match msg.referenced_message.as_ref() {
-                        None => match extract_reference_from_url(&msg.content) {
-                            Some(cursor) => State::Got { cursor },
-                            None => State::Terminal,
-                        },
-                        Some(m) => {
+                    let option = msg
+                        .referenced_message
+                        .as_ref()
+                        .map(|m| {
                             let channel_id = m.channel_id.get();
                             let message_id = m.id.get();
 
-                            let cursor = (channel_id, message_id);
+                            (channel_id, message_id)
+                        })
+                        .or_else(|| extract_reference_from_url(&msg.content));
 
-                            State::Got { cursor }
-                        }
+                    let state = match option {
+                        None => State::Terminal,
+                        Some(cursor) => State::Got { cursor },
                     };
 
                     (state, Poll::Ready(Some(msg)))
@@ -333,46 +376,87 @@ mod cm {
     }
 }
 
+use tracing::error;
+
 #[async_trait]
 impl EventHandler for EvHandler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        // Internal Error
         let Some(ci) = interaction.as_command() else {
-            unreachable!("Unexpected interaction: {:?}", interaction);
+            return error!("Unexpected interaction: {interaction:?}");
         };
 
+        // Request Error
         if ci.user.bot || ci.user.system {
-            return;
+            let cirm = CreateInteractionResponseMessage::default().content("Only users can use");
+            let cir = CreateInteractionResponse::Message(cirm);
+            let result = ci.create_response(&ctx, cir).await;
+
+            if let Err(e) = result {
+                return error!("Failed to create interaction response: {e}");
+            }
         }
 
-        ci.defer(&ctx).await.unwrap();
+        // Internal Error
+        if let Err(e) = ci.defer(&ctx).await {
+            return error!("Failed to create interaction response: {e}");
+        }
 
-        match ci.data.kind {
+        let result = match ci.data.kind {
             CommandType::ChatInput => image(&ctx, ci).await,
             CommandType::Message => completion(&ctx, ci).await,
-            kind => unreachable!("Unexpected command type: {:?}", kind),
+
+            // Internal Error
+            kind => {
+                let content = format!("Unexpected command type: {kind:?}",);
+                let cirm = CreateInteractionResponseMessage::default().content(&content);
+                let cir = CreateInteractionResponse::Message(cirm);
+                let result = ci.create_response(&ctx, cir).await;
+
+                // Internal Error
+                if let Err(e) = result {
+                    error!("Failed to create interaction response: {e}");
+                }
+
+                return error!("{content}");
+            }
+        };
+
+        // Internal Error
+        if let Err(e) = result {
+            let cirf = CreateInteractionResponseFollowup::default().content(format!("```{e}```"));
+            let result = ci.create_followup(&ctx, cirf).await;
+
+            // Internal Error
+            if let Err(e) = result {
+                error!("Failed to create interaction response: {e}");
+            }
+
+            error!("{e}");
         }
     }
 
-    async fn ready(&self, ctx: Context, self_bot: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
         info!("Starting...");
 
         let version = env!("CARGO_PKG_VERSION");
         ctx.set_activity(Some(ActivityData::playing(format!("v{version}"))));
 
-        info!("Running ichiyoAI v{}", version);
-        info!(
-            "Connected!: {name}(Id:{id})",
-            name = self_bot.user.name,
-            id = self_bot.user.id
-        );
+        info!("Running ichiyoAI v{version}");
+        info!("Connected!: {}(Id:{})", ready.user.name, ready.user.id);
 
         let guild_id = crate::envs().guild_id;
-        let map = serde_json::from_str::<serde_json::Value>(include_str!("commands.json")).unwrap();
+        let map = match serde_json::from_str::<serde_json::Value>(include_str!("commands.json")) {
+            Ok(val) => val,
+            Err(e) => return error!("Failed to parse `commands.json`: {e}"),
+        };
 
-        let commands = ctx
-            .http
-            .create_guild_commands(guild_id.into(), &map)
-            .await
-            .unwrap();
+        // TODO: will report this?
+        let _ = match ctx.http.create_guild_commands(guild_id.into(), &map).await {
+            Ok(vec) => vec,
+            Err(e) => return error!("Failed to create guild commands: {e}"),
+        };
+
+        info!("Created guild commands: <no details provided>");
     }
 }
