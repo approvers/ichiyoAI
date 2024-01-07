@@ -14,6 +14,7 @@ impl Gemini {
 }
 
 impl super::Completion for Gemini {
+    #[tracing::instrument(skip_all)]
     async fn next(
         &self,
         messages: &[super::Message],
@@ -22,45 +23,70 @@ impl super::Completion for Gemini {
             contents: messages.iter().map(Into::into).collect(),
         };
 
+        let raw = serde_json::to_vec(&req).map_err(|cause| {
+            tracing::error!(?cause, "Failed to serialize request");
+            anyhow::anyhow!("Failed to serialize request")
+        })?;
+
+        let body = reqwest::Body::from(raw);
+
         let res = self
             .http
             .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent")
             .header(reqwest::header::HeaderName::from_static("x-goog-api-key"), &self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(reqwest::Body::from(serde_json::to_vec(&req)?))
+            .body(body)
             .send()
-            .await?
-            .error_for_status()?;
+            .await
+            .map_err(|cause| {
+                tracing::error!(?cause, "Failed to send request");
+                anyhow::anyhow!("Failed to send request")
+            })?;
 
         if res.status() != reqwest::StatusCode::OK {
-            anyhow::bail!("unexpected status code: {}", res.status());
+            tracing::error!(res.status = ?res.status(), "Unexpected status code");
         }
 
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<Response>(&res)?;
+        let res = res.bytes().await.map_err(|cause| {
+            tracing::error!(?cause, "Failed to read response");
+            anyhow::anyhow!("Failed to read response")
+        })?;
+
+        let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
+            tracing::error!(?cause, "Failed to deserialize response");
+
+            if let Ok(body) = serde_json::from_slice::<serde_json::Value>(&res) {
+                tracing::error!(%body, "Actual response (recognizable as JSON)");
+            }
+
+            anyhow::anyhow!("Failed to deserialize response")
+        })?;
 
         let Some([candidate]) = res.candidates else {
             let reason = res.prompt_feedback.block_reason;
-            anyhow::bail!("prompt blocked! reason: {reason:?}");
+            anyhow::bail!("Prompt blocked! reason: {reason:?}");
         };
 
         if candidate.finish_reason != FinishReason::Stop {
-            anyhow::bail!("unexpected finish reason: {}", candidate.finish_reason);
+            anyhow::bail!("Unexpected finish reason: {}", candidate.finish_reason);
         }
 
         let content = {
             let Content::Model { parts } = &candidate.content else {
-                anyhow::bail!("unexpected content: {:?}", candidate.content);
+                tracing::error!(?candidate.content, "Unexpected content");
+                anyhow::bail!("Failed to deserialize response");
             };
 
             let [ref part] = parts[..] else {
-                anyhow::bail!("unexpected number of parts: {}", parts.len());
+                tracing::error!(?parts, "Unexpected number of parts");
+                anyhow::bail!("Failed to deserialize response");
             };
 
             #[allow(irrefutable_let_patterns)]
             let Part::Text(text) = part
             else {
-                anyhow::bail!("unexpected part: {:?}", part);
+                tracing::error!(?part, "Unexpected part");
+                anyhow::bail!("Failed to deserialize response");
             };
 
             text.clone().into_owned()
@@ -82,7 +108,7 @@ impl super::Completion for Gemini {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Request<'a> {
     contents: Vec<Content<'a>>,
@@ -91,7 +117,7 @@ struct Request<'a> {
     // generation_config: GenerationConfig,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "role")]
 enum Content<'a> {
@@ -99,7 +125,7 @@ enum Content<'a> {
     Model { parts: Vec<Part<'a>> },
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum Part<'a> {
     // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
@@ -122,7 +148,7 @@ impl<'a> From<&'a super::Message> for Content<'a> {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Response<'a> {
     // FACT: supported only `1`
@@ -131,20 +157,20 @@ struct Response<'a> {
     prompt_feedback: PromptFeedback,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PromptFeedback {
     block_reason: Option<BlockReason>,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 enum BlockReason {
     Safety,
     Other,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Candidate<'a> {
     content: Content<'a>,
@@ -157,7 +183,7 @@ struct Candidate<'a> {
     // index: usize,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum FinishReason {
     Stop,
     Maxtokens,
@@ -216,21 +242,29 @@ impl<'de> serde::de::Visitor<'de> for FinishReasonVisitor {
     }
 }
 
+#[tracing::instrument(skip_all)]
 async fn count_tokens(
     client: &reqwest::Client,
     token: &str,
     contents: Vec<Content<'_>>,
 ) -> anyhow::Result<usize> {
-    #[derive(serde::Serialize)]
+    #[derive(Debug, serde::Serialize)]
     struct Request<'a> {
         contents: Vec<Content<'a>>,
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(Debug, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Response {
         total_tokens: usize,
     }
+
+    let req = Request { contents };
+    let raw = serde_json::to_vec(&req).map_err(|cause| {
+        tracing::error!(?cause, "Failed to serialize request");
+        anyhow::anyhow!("Failed to serialize request")
+    })?;
+    let body = reqwest::Body::from(raw);
 
     let res = client
         .post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens")
@@ -239,19 +273,32 @@ async fn count_tokens(
             token,
         )
         .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .body(reqwest::Body::from(serde_json::to_vec(&Request {
-            contents,
-        })?))
+        .body(body)
         .send()
-        .await?
-        .error_for_status()?;
+        .await
+        .map_err(|cause| {
+            tracing::error!(?cause, "Failed to send request");
+            anyhow::anyhow!("Failed to send request")
+        })?;
 
     if res.status() != reqwest::StatusCode::OK {
-        anyhow::bail!("unexpected status code: {}", res.status());
+        tracing::error!(res.status = ?res.status(), "Unexpected status code");
     }
 
-    let res = res.bytes().await?;
-    let res = serde_json::from_slice::<Response>(&res)?;
+    let res = res.bytes().await.map_err(|cause| {
+        tracing::error!(?cause, "Failed to read response");
+        anyhow::anyhow!("Failed to read response")
+    })?;
+
+    let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
+        tracing::error!(?cause, "Failed to deserialize response");
+
+        if let Ok(body) = serde_json::from_slice::<serde_json::Value>(&res) {
+            tracing::error!(%body, "Actual response (recognizable as JSON)");
+        }
+
+        anyhow::anyhow!("Failed to deserialize response")
+    })?;
 
     Ok(res.total_tokens)
 }

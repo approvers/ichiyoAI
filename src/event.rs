@@ -1,5 +1,4 @@
 use anyhow::bail;
-use anyhow::Context as _;
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use serenity::builder::CreateAttachment;
@@ -16,7 +15,6 @@ use serenity::{
     gateway::ActivityData,
     model::gateway::Ready,
 };
-use tracing::info;
 
 use std::time::Duration;
 
@@ -63,6 +61,7 @@ impl<'a> FromIterator<OptionsField<'a>> for Options<'a> {
     }
 }
 
+#[tracing::instrument(skip_all)]
 async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     enum Modelname {
         DallE2,
@@ -77,7 +76,10 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
             ("model", CommandDataOptionValue::String(s)) => Some(OptionsField::Model(s)),
             ("prompt", CommandDataOptionValue::String(s)) => Some(OptionsField::Prompt(s)),
 
-            _ => None,
+            _ => {
+                tracing::warn!(?o, "Unexpected option");
+                None
+            }
         })
         .collect::<Options>();
 
@@ -88,9 +90,10 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         name => bail!("Unexpected `model`: {}", name.unwrap_or("")),
     };
 
-    let is_sponsor = is_sponsor(ctx, &ci.user)
-        .await
-        .context("Failed to get sponsor role")?;
+    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or_else(|cause| {
+        tracing::warn!(?cause, "Failed to get sponsor role");
+        false
+    });
 
     match (is_sponsor, &modelname) {
         (false, Modelname::DallE3) => bail!("You must be a sponsor to use model \"DALL-E 3\""),
@@ -119,7 +122,10 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     };
 
     let (content, files) = {
-        let (img, meta) = result.context("Failed to create image")?;
+        let (img, meta) = result.map_err(|cause| {
+            tracing::error!(?cause, "Failed to create image");
+            anyhow::anyhow!("Failed to create image")
+        })?;
 
         let ichiyo_ai::GeneratedImage { image, prompt, ext } = img;
         let ichiyo_ai::dalle::Metadata { model } = meta;
@@ -132,21 +138,19 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         (content, [(filename, filedata)])
     };
 
-    if content.len() > 2000 {
-        bail!("Unexpected content length (too long): {}", content.len());
-    }
-
     let cirf = CreateInteractionResponseFollowup::default()
         .content(content)
         .files(files.map(|(name, raw)| CreateAttachment::bytes(raw, name)));
 
-    ci.create_followup(ctx, cirf)
-        .await
-        .context("Failed to create interaction response")?;
+    ci.create_followup(ctx, cirf).await.map_err(|cause| {
+        tracing::error!(?cause, "Failed to create interaction response");
+        anyhow::anyhow!("Failed to create interaction response")
+    })?;
 
     Ok(())
 }
 
+#[tracing::instrument(skip_all)]
 async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     enum Modelname {
         GPT35Turbo,
@@ -159,12 +163,16 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         "Text (GPT-4 Turbo)" => Modelname::GPT4Turbo,
         "Text (Gemini Pro)" => Modelname::GeminiPro,
 
-        name => bail!("Unexpected command name: {name}"),
+        name => {
+            tracing::error!(?name, "Unexpected command name");
+            bail!("Unexpected command name: {name}");
+        }
     };
 
-    let is_sponsor = is_sponsor(ctx, &ci.user)
-        .await
-        .context("Failed to get sponsor role")?;
+    let is_sponsor = is_sponsor(ctx, &ci.user).await.unwrap_or_else(|cause| {
+        tracing::warn!(?cause, "Failed to get sponsor role");
+        false
+    });
 
     match (is_sponsor, &modelname) {
         (false, Modelname::GPT4Turbo) => {
@@ -174,7 +182,8 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     }
 
     let Some(ResolvedTarget::Message(msg)) = ci.data.target() else {
-        bail!("Unexpected target: {:?}", ci.data.target());
+        tracing::error!(ci.data.target = ?ci.data.target(), "Unexpected target");
+        bail!("Failed to recognize interaction");
     };
 
     // first is newest, last is oldest
@@ -228,7 +237,10 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     let content = {
         let link = msg.link();
 
-        let (msg, meta) = result.context("Failed to complete")?;
+        let (msg, meta) = result.map_err(|cause| {
+            tracing::error!(?cause, "Failed to complete");
+            anyhow::anyhow!("Failed to complete")
+        })?;
 
         let content = msg.content();
         let ichiyo_ai::Metadata {
@@ -240,16 +252,11 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         format!("{content}\n\n**`{by}`** | ¥{price_yen:.2} | {tokens} tokens | from {link}")
     };
 
-    // Internal Error
-    if content.len() > 2000 {
-        bail!("Unexpected content length (too long): {}", content.len());
-    }
-
     let cirf = CreateInteractionResponseFollowup::default().content(content);
-    let _ = ci
-        .create_followup(ctx, cirf)
-        .await
-        .context("Failed to create interaction response")?;
+    let _ = ci.create_followup(ctx, cirf).await.map_err(|cause| {
+        tracing::error!(?cause, "Failed to create interaction response");
+        anyhow::anyhow!("Failed to create interaction response")
+    })?;
 
     Ok(())
 }
@@ -263,7 +270,6 @@ mod cm {
     use core::task::Poll;
     use serenity::model::channel::Message;
     use tokio_stream::Stream;
-    use tracing::trace;
 
     pub struct ChainedMessages {
         ctx: serenity::client::Context,
@@ -303,11 +309,9 @@ mod cm {
     impl Stream for ChainedMessages {
         type Item = Message;
 
+        #[tracing::instrument(skip_all)]
         fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-            trace!(
-                "Polling on `ChainedMessages`: state = {}",
-                self.state.kind()
-            );
+            tracing::debug!(state = ?self.state.kind(), "Polling on `ChainedMessages`");
 
             let (new, ret) = match &mut self.state {
                 State::Got { cursor } => {
@@ -327,7 +331,8 @@ mod cm {
                     // because if `Future` is already ready, `Future::poll(...)` will always return
                     // `Poll::Ready(_)`. it means when `Self::poll_next(...)` is called in future,
                     // then process it.
-                    let _ = future.as_mut().poll(cx);
+                    let polled = future.as_mut().poll(cx);
+                    tracing::debug!(ret = ?polled, "Polled on `GetMessage`");
 
                     (State::Pending { future }, Poll::Pending)
                 }
@@ -363,8 +368,11 @@ mod cm {
     }
 
     // HACK: 取り急ぎ実装したが, best practice かは知らない
+    #[tracing::instrument(skip_all)]
     fn extract_reference_from_url(content: impl AsRef<str>) -> Option<(u64, u64)> {
         let content = content.as_ref();
+
+        tracing::debug!(url = ?content, "Extracting reference from url");
 
         let (_, ids) = content.rsplit_once("https://discord.com/channels/@me/")?;
         let (channel_id, message_id) = ids.split_once('/')?;
@@ -372,91 +380,96 @@ mod cm {
         let channel_id = channel_id.parse().ok()?;
         let message_id = message_id.parse().ok()?;
 
-        Some((channel_id, message_id))
+        let reference = (channel_id, message_id);
+
+        tracing::debug!(?reference, "Extracted reference");
+
+        Some(reference)
     }
 }
 
-use tracing::error;
-
 #[async_trait]
 impl EventHandler for EvHandler {
+    #[tracing::instrument(skip_all)]
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        // Internal Error
         let Some(ci) = interaction.as_command() else {
-            return error!("Unexpected interaction: {interaction:?}");
+            return tracing::error!(?interaction, "Unexpected interaction");
         };
 
-        // Request Error
         if ci.user.bot || ci.user.system {
             let cirm = CreateInteractionResponseMessage::default().content("Only users can use");
             let cir = CreateInteractionResponse::Message(cirm);
             let result = ci.create_response(&ctx, cir).await;
 
-            if let Err(e) = result {
-                return error!("Failed to create interaction response: {e}");
+            if let Err(cause) = result {
+                return tracing::error!(?cause, "Failed to create interaction response");
             }
         }
 
-        // Internal Error
-        if let Err(e) = ci.defer(&ctx).await {
-            return error!("Failed to create interaction response: {e}");
+        if let Err(cause) = ci.defer(&ctx).await {
+            return tracing::error!(?cause, "Failed to defer interaction");
         }
 
         let result = match ci.data.kind {
             CommandType::ChatInput => image(&ctx, ci).await,
             CommandType::Message => completion(&ctx, ci).await,
 
-            // Internal Error
             kind => {
-                let content = format!("Unexpected command type: {kind:?}",);
-                let cirm = CreateInteractionResponseMessage::default().content(&content);
+                tracing::error!(kind = ?kind, "Unexpected command type");
+
+                let cirm = CreateInteractionResponseMessage::default()
+                    .content("Failed to recognize interaction");
+
                 let cir = CreateInteractionResponse::Message(cirm);
                 let result = ci.create_response(&ctx, cir).await;
 
-                // Internal Error
-                if let Err(e) = result {
-                    error!("Failed to create interaction response: {e}");
+                if let Err(cause) = result {
+                    tracing::error!(?cause, "Failed to create interaction response");
                 }
 
-                return error!("{content}");
+                return;
             }
         };
 
-        // Internal Error
-        if let Err(e) = result {
-            let cirf = CreateInteractionResponseFollowup::default().content(format!("```{e}```"));
+        if let Err(cause) = result {
+            tracing::error!(?cause, "Failed to process interaction");
+
+            let cirf =
+                CreateInteractionResponseFollowup::default().content(format!("```{cause:?}```"));
             let result = ci.create_followup(&ctx, cirf).await;
 
-            // Internal Error
-            if let Err(e) = result {
-                error!("Failed to create interaction response: {e}");
+            if let Err(cause) = result {
+                tracing::error!(?cause, "Failed to create interaction response");
             }
-
-            error!("{e}");
         }
     }
 
+    #[tracing::instrument(skip_all)]
     async fn ready(&self, ctx: Context, ready: Ready) {
-        info!("Starting...");
+        tracing::info!("Starting...");
 
         let version = env!("CARGO_PKG_VERSION");
         ctx.set_activity(Some(ActivityData::playing(format!("v{version}"))));
 
-        info!("Running ichiyoAI v{version}");
-        info!("Connected!: {}(Id:{})", ready.user.name, ready.user.id);
+        tracing::info!(?version, "Running ichiyoAI");
+        tracing::info!(username = %ready.user.name, user_id = %ready.user.id, "Connected to Discord API!");
 
         let guild_id = crate::envs().guild_id;
-        let map = match serde_json::from_str::<serde_json::Value>(include_str!("commands.json")) {
+        let result = serde_json::from_str::<serde_json::Value>(include_str!("commands.json"));
+
+        let map = match result {
             Ok(val) => val,
-            Err(e) => return error!("Failed to parse `commands.json`: {e}"),
+            Err(cause) => return tracing::error!(?cause, "Failed to parse `commands.json`"),
         };
+
+        let result = ctx.http.create_guild_commands(guild_id.into(), &map).await;
 
         // TODO: will report this?
-        let _ = match ctx.http.create_guild_commands(guild_id.into(), &map).await {
+        let _ = match result {
             Ok(vec) => vec,
-            Err(e) => return error!("Failed to create guild commands: {e}"),
+            Err(cause) => return tracing::error!(?cause, "Failed to create guild commands"),
         };
 
-        info!("Created guild commands: <no details provided>");
+        tracing::info!(details = "none", "Created guild commands");
     }
 }

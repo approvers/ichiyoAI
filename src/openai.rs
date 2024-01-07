@@ -5,7 +5,7 @@ pub struct OpenAi<Model> {
     model: core::marker::PhantomData<Model>,
 }
 
-trait Model: for<'de> serde::de::Deserialize<'de> {
+trait Model {
     fn name() -> &'static str;
     fn price_yen(req_tokens: usize, res_tokens: usize) -> f64;
 }
@@ -24,20 +24,13 @@ macro_rules! define_model {
                 ($rreq * req_tokens as f64 + $rres * res_tokens as f64) / 1000.0 * 150.0
             }
         }
-
-        impl<'de> serde::Deserialize<'de> for $name {
-            fn deserialize<D: serde::de::Deserializer<'de>>(_: D) -> Result<Self, D::Error> {
-                unreachable!()
-            }
-        }
     };
 }
 
 define_model!(pub GPT4Turbo:  "gpt-4-1106-preview", rate = req 0.01  , res 0.03  );
 define_model!(pub GPT35Turbo: "gpt-3.5-turbo-1106", rate = req 0.0010, res 0.0020);
 
-#[allow(private_bounds)]
-impl<Model: self::Model> OpenAi<Model> {
+impl<Model> OpenAi<Model> {
     pub fn new(token: impl AsRef<str>) -> Self {
         Self {
             http: reqwest::Client::new(),
@@ -48,6 +41,7 @@ impl<Model: self::Model> OpenAi<Model> {
 }
 
 impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
+    #[tracing::instrument(skip_all)]
     async fn next(
         &self,
         messages: &[super::Message],
@@ -57,29 +51,63 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
             messages: messages.iter().map(Into::into).collect(),
         };
 
+        let raw = serde_json::to_vec(&req).map_err(|cause| {
+            tracing::error!(?cause, "Failed to serialize request");
+            anyhow::anyhow!("Failed to serialize request")
+        })?;
+
+        let body = reqwest::Body::from(raw);
+
         let res = self
             .http
             .post("https://api.openai.com/v1/chat/completions")
             .bearer_auth(&self.token)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(reqwest::Body::from(serde_json::to_vec(&req)?))
+            .body(body)
             .send()
-            .await?
-            .error_for_status()?;
+            .await
+            .map_err(|cause| {
+                tracing::error!(?cause, "Failed to send request");
+                anyhow::anyhow!("Failed to send request")
+            })?;
 
         if res.status() != reqwest::StatusCode::OK {
-            anyhow::bail!("unexpected status code: {}", res.status());
+            tracing::error!(res.status = ?res.status(), "Unexpected status code");
         }
 
-        let res = res.bytes().await?;
-        let res = serde_json::from_slice::<Response<Model>>(&res)?;
+        let res = res.bytes().await.map_err(|cause| {
+            tracing::error!(?cause, "Failed to read response");
+            anyhow::anyhow!("Failed to read response")
+        })?;
+
+        let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
+            tracing::error!(?cause, "Failed to deserialize response");
+
+            if let Ok(body) = serde_json::from_slice::<serde_json::Value>(&res) {
+                tracing::error!(%body, "Actual response (recognizable as JSON)");
+            }
+
+            anyhow::anyhow!("Failed to deserialize response")
+        })?;
+
+        if res.object != "text_completion" {
+            tracing::error!(?res.object, "Unexpected object");
+            anyhow::bail!("Failed to deserialize response");
+        }
+
+        if res.model != Model::name() {
+            tracing::error!(?res.model, "Unexpected model");
+            anyhow::bail!("Failed to deserialize response");
+        }
 
         let [choice] = &res.choices[..] else {
-            anyhow::bail!("unexpected number of choices: {}", res.choices.len());
+            tracing::error!(?res.choices, "Unexpected number of choices");
+            anyhow::bail!("Failed to deserialize response");
         };
 
         if choice.finish_reason != FinishReason::Stop {
-            anyhow::bail!("unexpected finish reason: {}", choice.finish_reason);
+            tracing::error!(?choice.finish_reason, "Unexpected finish reason",);
+            anyhow::bail!("Failed to deserialize response");
         }
 
         let content = choice.message.content.trim().to_owned();
@@ -93,13 +121,13 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 struct Request<'a> {
     model: &'static str,
     messages: Vec<Message<'a>>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(tag = "role")]
 #[serde(rename_all = "lowercase")]
 enum Message<'a> {
@@ -120,22 +148,19 @@ impl<'a> From<&'a super::Message> for Message<'a> {
     }
 }
 
-#[derive(serde::Deserialize)]
-struct Response<'a, Model: self::Model> {
+#[derive(Debug, serde::Deserialize)]
+struct Response<'a> {
     // id: &'a str,
     #[serde(borrow)]
     choices: Vec<Choice<'a>>,
     // created: Timestamp,
-    #[allow(unused)]
-    #[serde(with = "ModelName")]
-    model: ModelName<Model>,
+    model: &'a str,
     // system_fingertprint: &'a str,
-    #[allow(unused)]
-    object: Object,
+    object: &'a str,
     usage: Usage,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct Choice<'a> {
     finish_reason: FinishReason,
     // index: usize,
@@ -144,7 +169,7 @@ struct Choice<'a> {
     // logprobs: Option<Logprobs>,
 }
 
-#[derive(serde::Deserialize, PartialEq)]
+#[derive(Debug, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 enum FinishReason {
     Stop,
@@ -177,7 +202,7 @@ impl core::fmt::Display for FinishReason {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct ChoiceMessage<'a> {
     // cannot use `&'a str`, futher infomation:  https://github.com/serde-rs/serde/issues/1413
     content: alloc::borrow::Cow<'a, str>,
@@ -185,42 +210,9 @@ struct ChoiceMessage<'a> {
     // role: Role,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct Usage {
     completion_tokens: usize,
     prompt_tokens: usize,
     total_tokens: usize,
 }
-
-macro_rules! tag_struct {
-    ($name:ident $(<$ty:ident : $bound:path>)? is $tag:expr, expects $expect:expr) => {
-        struct $name$(<$ty : $bound>(core::marker::PhantomData<$ty>))?;
-
-        impl<'de, $($ty: $bound)?> serde::de::Deserialize<'de> for $name<$($ty)?> {
-            fn deserialize<D: serde::de::Deserializer<'de>>(
-                deserializer: D,
-            ) -> Result<Self, D::Error> {
-                deserializer.deserialize_str(Self$((core::marker::PhantomData::<$ty>))?)
-            }
-        }
-
-        impl <'de, $($ty: $bound)?> serde::de::Visitor<'de> for $name<$($ty)?> {
-            type Value = Self;
-
-            fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                formatter.write_str($expect)
-            }
-
-            fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
-                if value == $tag {
-                    Ok(Self$((core::marker::PhantomData::<$ty>))?)
-                } else {
-                    Err(E::custom(format!("unknown value: {}", value)))
-                }
-            }
-        }
-    };
-}
-
-tag_struct!(ModelName<Model: self::Model> is Model::name(), expects "a model name");
-tag_struct!(Object is "chat.completion", expects "a object name");
