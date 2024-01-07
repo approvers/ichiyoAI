@@ -1,4 +1,3 @@
-use once_cell::sync::OnceCell;
 use serenity::async_trait;
 use serenity::builder::CreateAttachment;
 use serenity::builder::CreateEmbed;
@@ -35,9 +34,6 @@ pub async fn is_sponsor(ctx: &Context, user: &User) -> Result<bool> {
 }
 
 pub struct EvHandler;
-
-pub static SYSTEM_CONTEXT: &str = "回答時は以下のルールに従うこと.\n- 1900文字以内に収めること。";
-pub static OWN_MENTION: OnceCell<String> = OnceCell::new();
 
 enum OptionsField<'a> {
     Model(&'a str),
