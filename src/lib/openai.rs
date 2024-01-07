@@ -49,12 +49,10 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
             messages: messages.iter().map(Into::into).collect(),
         };
 
-        let raw = serde_json::to_vec(&req).map_err(|cause| {
+        let body = serde_json::to_vec(&req).map_err(|cause| {
             tracing::error!(?cause, "Failed to serialize request");
             anyhow::anyhow!("Failed to serialize request")
         })?;
-
-        let body = reqwest::Body::from(raw);
 
         let res = self
             .http
