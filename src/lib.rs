@@ -28,10 +28,10 @@ pub trait Completion {
     ) -> impl Future<Output = anyhow::Result<(Message, Metadata)>> + Send + Sync;
 }
 
-mod gemini;
+mod google;
 mod openai;
 
-pub use gemini::Gemini;
+pub use google::Gemini;
 pub type OpenAiGPT4Turbo = openai::OpenAi<openai::GPT4Turbo>;
 pub type OpenAiGPT35Turbo = openai::OpenAi<openai::GPT35Turbo>;
 
