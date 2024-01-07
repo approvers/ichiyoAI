@@ -32,15 +32,15 @@ impl<Model> OpenAi<Model> {
     }
 }
 
-impl<Model: self::Model + Send + Sync> super::Image for OpenAi<Model> {
-    type Metadata = Metadata;
-
+impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
     async fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
-    ) -> anyhow::Result<(super::GeneratedImage, Self::Metadata)> {
+    ) -> anyhow::Result<(super::Image, super::IMetadata)> {
+        let prompt = prompt.as_ref();
+
         let req = Request {
-            prompt: prompt.as_ref(),
+            prompt,
             model: Model::NAME,
             response_format: "b64_json",
         };
@@ -65,20 +65,16 @@ impl<Model: self::Model + Send + Sync> super::Image for OpenAi<Model> {
         let [image] = res.data;
         assert!(image.b64_json.is_png());
 
-        let image = super::GeneratedImage {
-            image: image.b64_json.0,
-            prompt: image.revised_prompt.unwrap_or(prompt.as_ref()).to_owned(),
+        let image = super::Image {
+            raw: image.b64_json.raw,
+            prompt: image.revised_prompt.unwrap_or(prompt).to_owned(),
             ext: super::ImageExt::Png,
         };
 
-        let metadata = Metadata { model: Model::NAME };
+        let metadata = super::IMetadata { model: Model::NAME };
 
         Ok((image, metadata))
     }
-}
-
-pub struct Metadata {
-    pub model: &'static str,
 }
 
 #[derive(serde::Serialize)]
@@ -102,11 +98,14 @@ struct Image<'a> {
 
 #[derive(serde::Deserialize)]
 #[serde(transparent)]
-struct Base64Image(#[serde(with = "base64")] Vec<u8>);
+struct Base64Image {
+    #[serde(with = "base64")]
+    raw: Vec<u8>,
+}
 
 impl Base64Image {
     fn is_png(&self) -> bool {
-        self.0
+        self.raw
             .starts_with(&[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
     }
 }

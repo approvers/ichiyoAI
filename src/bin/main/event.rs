@@ -105,7 +105,7 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         Some(prompt) => prompt,
     };
 
-    use ichiyo_ai::Image as _;
+    use ichiyo_ai::Generation as _;
     let result = match modelname {
         Modelname::DallE2 => {
             let token = &crate::envs().openai_api_key;
@@ -127,11 +127,11 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
             anyhow::anyhow!("Failed to create image")
         })?;
 
-        let ichiyo_ai::GeneratedImage { image, prompt, ext } = img;
-        let ichiyo_ai::dalle::Metadata { model } = meta;
+        let ichiyo_ai::Image { raw, prompt, ext } = img;
+        let ichiyo_ai::IMetadata { model } = meta;
 
         let filename = format!("image.{}", ext.as_str());
-        let filedata = image;
+        let filedata = raw;
 
         let content = format!("{model} - **`{prompt}`**");
 
@@ -243,7 +243,7 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
         })?;
 
         let content = msg.content();
-        let ichiyo_ai::Metadata {
+        let ichiyo_ai::CMetadata {
             tokens,
             price_yen,
             by,

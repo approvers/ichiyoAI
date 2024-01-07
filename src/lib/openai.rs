@@ -43,7 +43,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
     async fn next(
         &self,
         messages: &[super::Message],
-    ) -> anyhow::Result<(super::Message, super::Metadata)> {
+    ) -> anyhow::Result<(super::Message, super::CMetadata)> {
         let req = Request {
             model: Model::NAME,
             messages: messages.iter().map(Into::into).collect(),
@@ -109,7 +109,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
         }
 
         let content = choice.message.content.trim().to_owned();
-        let metadata = super::Metadata {
+        let metadata = super::CMetadata {
             tokens: res.usage.total_tokens,
             price_yen: Model::price_yen(res.usage.prompt_tokens, res.usage.completion_tokens),
             by: Model::NAME,

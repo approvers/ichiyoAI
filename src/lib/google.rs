@@ -36,7 +36,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
     async fn next(
         &self,
         messages: &[super::Message],
-    ) -> anyhow::Result<(super::Message, super::Metadata)> {
+    ) -> anyhow::Result<(super::Message, super::CMetadata)> {
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
             ..Default::default()
@@ -122,7 +122,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
             .chain([candidate.content])
             .collect();
 
-        let metadata = super::Metadata {
+        let metadata = super::CMetadata {
             tokens: count_tokens::<Model>(&self.http, &self.token, contents).await?,
             price_yen: 0.0,
             by: Model::NAME,
