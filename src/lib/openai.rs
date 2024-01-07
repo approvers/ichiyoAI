@@ -43,7 +43,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
     async fn next(
         &self,
         messages: &[super::Message],
-    ) -> anyhow::Result<(super::Message, super::CMetadata)> {
+    ) -> Result<(super::Message, super::CMetadata), alloc::borrow::Cow<'static, str>> {
         let req = Request {
             model: Model::NAME,
             messages: messages.iter().map(Into::into).collect(),
@@ -51,7 +51,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
 
         let body = serde_json::to_vec(&req).map_err(|cause| {
             tracing::error!(?cause, "Failed to serialize request");
-            anyhow::anyhow!("Failed to serialize request")
+            "Failed to serialize request"
         })?;
 
         let res = self
@@ -64,7 +64,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
             .await
             .map_err(|cause| {
                 tracing::error!(?cause, "Failed to send request");
-                anyhow::anyhow!("Failed to send request")
+                "Failed to send request"
             })?;
 
         if res.status() != reqwest::StatusCode::OK {
@@ -73,7 +73,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
 
         let res = res.bytes().await.map_err(|cause| {
             tracing::error!(?cause, "Failed to read response");
-            anyhow::anyhow!("Failed to read response")
+            "Failed to read response"
         })?;
 
         let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
@@ -83,27 +83,27 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
                 tracing::error!(%body, "Actual response (recognizable as JSON)");
             }
 
-            anyhow::anyhow!("Failed to deserialize response")
+            "Failed to deserialize response"
         })?;
 
         if res.object != "text_completion" {
             tracing::error!(?res.object, "Unexpected object");
-            anyhow::bail!("Failed to deserialize response");
+            return Err("Failed to deserialize response".into());
         }
 
         if res.model != Model::NAME {
             tracing::error!(?res.model, "Unexpected model");
-            anyhow::bail!("Failed to deserialize response");
+            return Err("Failed to deserialize response".into());
         }
 
         let [choice] = &res.choices[..] else {
             tracing::error!(?res.choices, "Unexpected number of choices");
-            anyhow::bail!("Failed to deserialize response");
+            return Err("Failed to deserialize response".into());
         };
 
         if choice.finish_reason != FinishReason::Stop {
             tracing::error!(?choice.finish_reason, "Unexpected finish reason",);
-            anyhow::bail!("Failed to deserialize response");
+            return Err("Failed to deserialize response".into());
         }
 
         let content = choice.message.content.trim().to_owned();

@@ -37,7 +37,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
     async fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
-    ) -> anyhow::Result<(super::Image, super::IMetadata)> {
+    ) -> Result<(super::Image, super::IMetadata), alloc::borrow::Cow<'static, str>> {
         let prompt = prompt.as_ref();
 
         let req = Request {
@@ -48,7 +48,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
 
         let body = serde_json::to_vec(&req).map_err(|cause| {
             tracing::error!(?cause, "Failed to serialize request");
-            anyhow::anyhow!("Failed to serialize request")
+            "Failed to serialize request"
         })?;
 
         let res = self
@@ -61,7 +61,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
             .await
             .map_err(|cause| {
                 tracing::error!(?cause, "Failed to send request");
-                anyhow::anyhow!("Failed to send request")
+                "Failed to send request"
             })?;
 
         if res.status() != reqwest::StatusCode::OK {
@@ -70,7 +70,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
 
         let res = res.bytes().await.map_err(|cause| {
             tracing::error!(?cause, "Failed to read response");
-            anyhow::anyhow!("Failed to read response")
+            "Failed to read response"
         })?;
 
         let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
@@ -80,7 +80,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
                 tracing::error!(%body, "Actual response (recognizable as JSON)");
             }
 
-            anyhow::anyhow!("Failed to deserialize response")
+            "Failed to deserialize response"
         })?;
 
         let [image] = res.data;

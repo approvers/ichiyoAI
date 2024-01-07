@@ -36,7 +36,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
     async fn next(
         &self,
         messages: &[super::Message],
-    ) -> anyhow::Result<(super::Message, super::CMetadata)> {
+    ) -> Result<(super::Message, super::CMetadata), alloc::borrow::Cow<'static, str>> {
         let req = Request {
             contents: messages.iter().map(Into::into).collect(),
             ..Default::default()
@@ -49,7 +49,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
 
         let raw = serde_json::to_vec(&req).map_err(|cause| {
             tracing::error!(?cause, "Failed to serialize request");
-            anyhow::anyhow!("Failed to serialize request")
+            "Failed to serialize request"
         })?;
 
         let body = reqwest::Body::from(raw);
@@ -64,7 +64,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
             .await
             .map_err(|cause| {
                 tracing::error!(?cause, "Failed to send request");
-                anyhow::anyhow!("Failed to send request")
+                "Failed to send request"
             })?;
 
         if res.status() != reqwest::StatusCode::OK {
@@ -73,7 +73,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
 
         let res = res.bytes().await.map_err(|cause| {
             tracing::error!(?cause, "Failed to read response");
-            anyhow::anyhow!("Failed to read response")
+            "Failed to read response"
         })?;
 
         let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
@@ -83,34 +83,34 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
                 tracing::error!(%body, "Actual response (recognizable as JSON)");
             }
 
-            anyhow::anyhow!("Failed to deserialize response")
+            "Failed to deserialize response"
         })?;
 
         let Some([candidate]) = res.candidates else {
             let reason = res.prompt_feedback.block_reason;
-            anyhow::bail!("Prompt blocked! reason: {reason:?}");
+            return Err("Prompt blocked! reason: {reason:?}".into());
         };
 
         if candidate.finish_reason != FinishReason::Stop {
-            anyhow::bail!("Unexpected finish reason: {}", candidate.finish_reason);
+            return Err(format!("Unexpected finish reason: {}", candidate.finish_reason).into());
         }
 
         let content = {
             let Content::Model { parts } = &candidate.content else {
                 tracing::error!(?candidate.content, "Unexpected content");
-                anyhow::bail!("Failed to deserialize response");
+                return Err("Failed to deserialize response".into());
             };
 
             let [ref part] = parts[..] else {
                 tracing::error!(?parts, "Unexpected number of parts");
-                anyhow::bail!("Failed to deserialize response");
+                return Err("Failed to deserialize response".into());
             };
 
             #[allow(irrefutable_let_patterns)]
             let Part::Text(text) = part
             else {
                 tracing::error!(?part, "Unexpected part");
-                anyhow::bail!("Failed to deserialize response");
+                return Err("Failed to deserialize response".into());
             };
 
             text.clone().into_owned()
@@ -354,7 +354,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
     client: &reqwest::Client,
     token: &str,
     contents: Vec<Content<'_>>,
-) -> anyhow::Result<usize> {
+) -> Result<usize, alloc::borrow::Cow<'static, str>> {
     #[derive(Debug, serde::Serialize)]
     struct Request<'a> {
         contents: Vec<Content<'a>>,
@@ -374,7 +374,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
     let req = Request { contents };
     let raw = serde_json::to_vec(&req).map_err(|cause| {
         tracing::error!(?cause, "Failed to serialize request");
-        anyhow::anyhow!("Failed to serialize request")
+        "Failed to serialize request"
     })?;
     let body = reqwest::Body::from(raw);
 
@@ -387,7 +387,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
         .await
         .map_err(|cause| {
             tracing::error!(?cause, "Failed to send request");
-            anyhow::anyhow!("Failed to send request")
+            "Failed to send request"
         })?;
 
     if res.status() != reqwest::StatusCode::OK {
@@ -396,7 +396,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
 
     let res = res.bytes().await.map_err(|cause| {
         tracing::error!(?cause, "Failed to read response");
-        anyhow::anyhow!("Failed to read response")
+        "Failed to read response"
     })?;
 
     let res = serde_json::from_slice::<Response>(&res).map_err(|cause| {
@@ -406,7 +406,7 @@ async fn count_tokens<Model: self::Model + Send + Sync>(
             tracing::error!(%body, "Actual response (recognizable as JSON)");
         }
 
-        anyhow::anyhow!("Failed to deserialize response")
+        "Failed to deserialize response"
     })?;
 
     Ok(res.total_tokens)

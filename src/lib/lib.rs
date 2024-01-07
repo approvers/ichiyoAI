@@ -26,7 +26,7 @@ pub trait Completion {
     fn next(
         &self,
         messages: &[Message],
-    ) -> impl Future<Output = anyhow::Result<(Message, CMetadata)>> + Send + Sync;
+    ) -> impl Future<Output = Result<(Message, CMetadata), alloc::borrow::Cow<'static, str>>> + Send + Sync;
 }
 
 mod google;
@@ -40,7 +40,7 @@ pub trait Generation {
     fn create(
         &self,
         prompt: impl AsRef<str> + Send + Sync,
-    ) -> impl Future<Output = anyhow::Result<(Image, IMetadata)>> + Send + Sync;
+    ) -> impl Future<Output = Result<(Image, IMetadata), alloc::borrow::Cow<'static, str>>> + Send + Sync;
 }
 
 pub struct Image {
