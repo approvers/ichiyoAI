@@ -5,6 +5,13 @@ edition = "2021"
 license = "MIT"
 repository = "https://github.com/approvers/ichiyoAI"
 
+[[bin]]
+name = "ichiyo_ai"
+path = "src/bin/main/main.rs"
+
+[lib]
+path = "src/lib/lib.rs"
+
 [dependencies]
 anyhow = "1.0"
 async-openai = "0.17"
