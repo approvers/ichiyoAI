@@ -1,4 +1,3 @@
-use serenity::async_trait;
 use serenity::builder::CreateAttachment;
 use serenity::builder::CreateEmbed;
 use serenity::builder::CreateInteractionResponse;
@@ -389,7 +388,7 @@ mod cm {
     }
 }
 
-#[async_trait]
+#[serenity::async_trait]
 impl EventHandler for EvHandler {
     #[tracing::instrument(skip_all)]
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
