@@ -86,7 +86,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for OpenAi<Model> {
             "Failed to deserialize response"
         })?;
 
-        if res.object != "text_completion" {
+        if res.object != "chat.completion" {
             tracing::error!(?res.object, "Unexpected object");
             return Err("Failed to deserialize response".into());
         }
