@@ -109,18 +109,26 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
             let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiDallE2::new(token);
 
-            engine.create(prompt).await
+            tokio::time::timeout(TIMEOUT_DURATION, engine.create(prompt)).await
         }
         Modelname::DallE3 => {
             let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiDallE3::new(token);
 
-            engine.create(prompt).await
+            tokio::time::timeout(TIMEOUT_DURATION, engine.create(prompt)).await
+        }
+    };
+
+    let ret = match result {
+        Ok(result) => result?,
+        Err(e) => {
+            tracing::error!(?e, "Timeouted to generate image");
+            return Err("Timeouted to generate image".into());
         }
     };
 
     let (content, files) = {
-        let (img, meta) = result?;
+        let (img, meta) = ret;
 
         let ichiyo_ai::Image { raw, prompt, ext } = img;
         let ichiyo_ai::IMetadata { model } = meta;
@@ -209,26 +217,32 @@ async fn completion(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
             let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiGPT35Turbo::new(token);
 
-            engine.next(&msgs).await
+            tokio::time::timeout(TIMEOUT_DURATION, engine.next(&msgs)).await
         }
         Modelname::GPT4Turbo => {
             let token = &crate::envs().openai_api_key;
             let engine = ichiyo_ai::OpenAiGPT4Turbo::new(token);
 
-            engine.next(&msgs).await
+            tokio::time::timeout(TIMEOUT_DURATION, engine.next(&msgs)).await
         }
         Modelname::GeminiPro => {
             let token = &crate::envs().google_ai_api_key;
             let engine = ichiyo_ai::GoogleGeminiPro::new(token);
 
-            engine.next(&msgs).await
+            tokio::time::timeout(TIMEOUT_DURATION, engine.next(&msgs)).await
+        }
+    };
+
+    let ret = match result {
+        Ok(result) => (msg.link(), result?),
+        Err(e) => {
+            tracing::error!(?e, "Timeouted to generate completion");
+            return Err("Timeouted to generate completion".into());
         }
     };
 
     let content = {
-        let link = msg.link();
-
-        let (msg, meta) = result?;
+        let (link, (msg, meta)) = ret;
 
         let content = msg.content();
         let ichiyo_ai::CMetadata {
