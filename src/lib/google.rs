@@ -112,9 +112,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
                 return Err("Failed to deserialize response".into());
             };
 
-            #[allow(irrefutable_let_patterns)]
-            let Part::Text(text) = part
-            else {
+            let Part::Text(text) = part else {
                 tracing::error!(?part, "Unexpected part");
                 return Err("Failed to deserialize response".into());
             };
