@@ -65,7 +65,7 @@ impl<Model: self::Model + Send + Sync> super::Generation for OpenAi<Model> {
             })?;
 
         if res.status() != reqwest::StatusCode::OK {
-            tracing::error!(res.status = ?res.status(), "Unexpected status code");
+            tracing::warn!(res.status = ?res.status(), "Unexpected status code");
         }
 
         let res = res.bytes().await.map_err(|cause| {
