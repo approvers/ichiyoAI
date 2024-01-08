@@ -63,7 +63,7 @@ LaMDA, PaLM2 の後継として供し, Gemini Ultra, Gemini Pro, Gemini Nano か
 | モデル名 | ichiyoAI の対応バージョン | Input | Output | Price |
 | --- | --- | --- | --- | --- |
 | Gemini Pro | `v2.0.0` 〜 | Text | Text | Free |
-| Gemini Pro Vision | 未対応(`*`) | Text and Image | Text | Free |
+| Gemini Pro Vision | 未対応 | Text and Image | Text | Free |
 
 ### DALL-E
 
@@ -106,3 +106,5 @@ docker pull ghcr.io/approvers/ichiyo_ai:vX.Y.Z
 | `OPENAI_API_KEY`    | OpenAI API のトークン  | `Yes`    |
 | `GUILD_ID`          | 限界開発鯖の ID         | `Yes`    |
 | `SPONSOR_ROLE_ID`   | 購読者ロールの ID        | `Yes`     |
+| `GOOGLE_AI_API_KEY` | Google AI Studio のトークン | `Yes`     |
+| `SENTRY_DSN`        | Sentry の DSN           | `No`     |
