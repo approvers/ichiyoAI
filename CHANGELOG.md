@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.21.0...ichiyo_ai-v2.0.0) (2024-01-08)
+
+
+### ⚠ BREAKING CHANGES
+
+ichiyoAI v2.0.0 では Gemini への対応等や Application Command への対応が行われました.
+
+* 環境変数に `GOOGLE_AI_API_KEY`, `SENTRY_DSN` が追加されました.
+  * `GOOGLE_AI_API_KEY` は指定しないと起動できません. [Google AI Studio](https://makersuite.google.com) で発行できます.
+  * `SENTRY_DSN` は指定しなかった場合 Sentry によるエラー監視が行われません.
+* ichiyoAI は起動時にギルドコマンドで Application Command を設定します.
+  * 自分の環境で起動する場合は Bot に登録されたコマンドが上書きされても大丈夫か確認してからにしてください.
+  * 限界開発鯖版はそのまま利用できます.
+
+### Features
+
+* v2 の実装 ([#185](https://github.com/approvers/ichiyoAI/issues/185)) ([4157da0](https://github.com/approvers/ichiyoAI/commit/4157da06c415caca2bb89b4c0aa91a37f84cc5e1))
+* Text Generation が Message Command で利用できるようになりました.
+  * これにより, 限界税に納税しているメンバーでも GPT-3.5 Turbo が利用できます.
+  * メンションによる生成は廃止されました. 新しい利用方法については [ドキュメント](https://ichiyoai.approvers.dev/how-to/text-generation.html) を参照してください.
+  * **重要:** 限界税を納税していない場合は `Text (GPT-4 Turbo)` コマンドは表示されません. (限界開発鯖版のみ)
+* Image Generation が Application Command で利用できるようになりました.
+  * これにより, 限界税に納税しているメンバーでも DALL-E 2 が利用できます.
+  * `!image` による生成は廃止されました. 新しい利用方法については [ドキュメント](https://ichiyoai.approvers.dev/how-to/image-generation.html) を参照してください.
+* Gemini Pro が利用できるようになりました.
+  * Google が開発した GPT-3.5 Turbo を凌駕するマルチモーダル大規模言語モデルです.
+  * Gemini Pro は GPT-3.5 Turbo のライバルとして位置づけられており, DeepMind Technologies によるベンチマークでは多くの測定において GPT-3.5 Turbo を上回っています.
+  * 詳しいベンチマーク結果は [こちら](https://deepmind.google/technologies/gemini/#capabilities)
+
 ## [1.21.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.20.1...ichiyo_ai-v1.21.0) (2024-01-03)
 
 
@@ -17,8 +46,8 @@
 ## [1.20.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.19.1...ichiyo_ai-v1.20.0) (2024-01-02)
 
 
-> [!NOTE]
-> ichiyoAI v1 最後のリリースになります
+ [!NOTE]
+ ichiyoAI v1 最後のリリースになります
 
 ### Features
 
