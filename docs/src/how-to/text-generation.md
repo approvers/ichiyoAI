@@ -3,14 +3,10 @@
 ichiyoAI は ChatGPT, Gemini を利用したテキスト生成に対応しています.
 
 - [使用方法](#使用方法)
-  - [Message Command](#message-command)
-  - [メンション (Legacy)](#メンション-legacy)
 - [返信モード](#返信モード)
 - [注意事項](#注意事項)
 
 ## 使用方法
-
-### Message Command
 
 ichiyoAI に送信するプロンプトメッセージに対して Message Command を送信することで, テキスト生成を行うことができます.
 
@@ -20,19 +16,20 @@ Message Command は以下のように構成されています. 使用するモ�
 | --- | --- |
 | GPT-4 Turbo | `Text (GPT-4 Turbo)` |
 | GPT-3.5 Turbo | `Text (GPT-3.5 Turbo)` |
-| Gemini | `Text (Gemini)` |
+| Gemini Pro | `Text (Gemini Pro)` |
 
-### メンション (Legacy)
+( `GPT-4 Turbo` は限界税への納税が必要です. 詳しくは [こちら](../premium-access.md) を参照してください.)
 
-v1.19.0 以前の方法です. この方法は今後削除される可能性があります.
+Message Command はメッセージに対して右クリック (モバイル版では長押し) すると表示されるコンテキストメニューから利用できます.
 
-ichiyoAI にメンションを送信することで, テキスト生成を行うことができます. ただしこの方法は **GPT-4 Turbo, GPT-3.5 Turbo のみ対応しています**. Gemini は対応していません.
+![コンテキストメニュー](../image/how-to/message-context-menu.png)
 
 ## 返信モード
 
-ichiyoAI のメッセージに対してメンション付きで返信すると, 返信元のリプライまで ChatGPT, Gemini が理解した上で応答します.
+ichiyoAI のメッセージに対してメンション付きで返信し, そのメッセージに対して Message Command を使用すると返信元のリプライまで ChatGPT, Gemini が理解した上で応答します.
 
 ## 注意事項
 
-- OpenAI API 側からのレスポンスの文字数が 2000 文字を超えた場合, Discord API の仕様上 ichiyoAI は返信せずに終了します.
-- OpenAI API へリクエストを送ってから3分以上かかった場合は tokio により自動的にタイムアウトになります。もう一度送るか、内容を見直してみてください。
+- v1.21.1 以前に利用できたメンションでの Text Generation は廃止されました. かわりに [Message Command](#使用方法) を利用してください.
+- API 側からのレスポンスの文字数が 2000 文字を超えた場合, Discord API の仕様上 ichiyoAI は返信せずに終了します.
+- API へリクエストを送ってから1分以上かかった場合は自動的にタイムアウトになります。もう一度送るか、内容を見直してみてください。
