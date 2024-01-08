@@ -179,12 +179,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <blockquote>
-<p><strong>注意</strong>:
-このドキュメントサイトは ichiyoAI v2.0.0 以降のバージョンに対応しています.
-v1.19.0 以前のバージョンに関する情報は提供されていません.</p>
-</blockquote>
-<h1 id="はじめに"><a class="header" href="#はじめに">はじめに</a></h1>
+                        <h1 id="はじめに"><a class="header" href="#はじめに">はじめに</a></h1>
 <p><strong>Welcome to ichiyoAI documentation!</strong></p>
 <p>ここは ichiyoAI の使い方などをまとめたドキュメントサイトです.</p>
 <ul>
@@ -215,34 +210,29 @@ v1.19.0 以前のバージョンに関する情報は提供されていません
 <div style="break-before: page; page-break-before: always;"></div><h1 id="text-generation"><a class="header" href="#text-generation">Text Generation</a></h1>
 <p>ichiyoAI は ChatGPT, Gemini を利用したテキスト生成に対応しています.</p>
 <ul>
-<li><a href="how-to/text-generation.html#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95">使用方法</a>
-<ul>
-<li><a href="how-to/text-generation.html#message-command">Message Command</a></li>
-<li><a href="how-to/text-generation.html#%E3%83%A1%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%B3-legacy">メンション (Legacy)</a></li>
-</ul>
-</li>
+<li><a href="how-to/text-generation.html#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95">使用方法</a></li>
 <li><a href="how-to/text-generation.html#%E8%BF%94%E4%BF%A1%E3%83%A2%E3%83%BC%E3%83%89">返信モード</a></li>
 <li><a href="how-to/text-generation.html#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85">注意事項</a></li>
 </ul>
 <h2 id="使用方法"><a class="header" href="#使用方法">使用方法</a></h2>
-<h3 id="message-command"><a class="header" href="#message-command">Message Command</a></h3>
 <p>ichiyoAI に送信するプロンプトメッセージに対して Message Command を送信することで, テキスト生成を行うことができます.</p>
 <p>Message Command は以下のように構成されています. 使用するモデルに合わせてコマンドを選んでください.</p>
 <div class="table-wrapper"><table><thead><tr><th>モデル</th><th>コマンド</th></tr></thead><tbody>
 <tr><td>GPT-4 Turbo</td><td><code>Text (GPT-4 Turbo)</code></td></tr>
 <tr><td>GPT-3.5 Turbo</td><td><code>Text (GPT-3.5 Turbo)</code></td></tr>
-<tr><td>Gemini</td><td><code>Text (Gemini)</code></td></tr>
+<tr><td>Gemini Pro</td><td><code>Text (Gemini Pro)</code></td></tr>
 </tbody></table>
 </div>
-<h3 id="メンション-legacy"><a class="header" href="#メンション-legacy">メンション (Legacy)</a></h3>
-<p>v1.19.0 以前の方法です. この方法は今後削除される可能性があります.</p>
-<p>ichiyoAI にメンションを送信することで, テキスト生成を行うことができます. ただしこの方法は <strong>GPT-4 Turbo, GPT-3.5 Turbo のみ対応しています</strong>. Gemini は対応していません.</p>
+<p>( <code>GPT-4 Turbo</code> は限界税への納税が必要です. 詳しくは <a href="how-to/../premium-access.html">こちら</a> を参照してください.)</p>
+<p>Message Command はメッセージに対して右クリック (モバイル版では長押し) すると表示されるコンテキストメニューから利用できます.</p>
+<p><img src="how-to/../image/how-to/message-context-menu.png" alt="コンテキストメニュー" /></p>
 <h2 id="返信モード"><a class="header" href="#返信モード">返信モード</a></h2>
-<p>ichiyoAI のメッセージに対してメンション付きで返信すると, 返信元のリプライまで ChatGPT, Gemini が理解した上で応答します.</p>
+<p>ichiyoAI のメッセージに対してメンション付きで返信し, そのメッセージに対して Message Command を使用すると返信元のリプライまで ChatGPT, Gemini が理解した上で応答します.</p>
 <h2 id="注意事項"><a class="header" href="#注意事項">注意事項</a></h2>
 <ul>
-<li>OpenAI API 側からのレスポンスの文字数が 2000 文字を超えた場合, Discord API の仕様上 ichiyoAI は返信せずに終了します.</li>
-<li>OpenAI API へリクエストを送ってから3分以上かかった場合は tokio により自動的にタイムアウトになります。もう一度送るか、内容を見直してみてください。</li>
+<li>v1.21.1 以前に利用できたメンションでの Text Generation は廃止されました. かわりに <a href="how-to/text-generation.html#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95">Message Command</a> を利用してください.</li>
+<li>API 側からのレスポンスの文字数が 2000 文字を超えた場合, Discord API の仕様上 ichiyoAI は返信せずに終了します.</li>
+<li>API へリクエストを送ってから1分以上かかった場合は自動的にタイムアウトになります。もう一度送るか、内容を見直してみてください。</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="image-generation"><a class="header" href="#image-generation">Image Generation</a></h1>
 <p>ichiyoAI は DALL-E を利用した画像生成に対応しています.</p>
@@ -252,22 +242,16 @@ v1.19.0 以前のバージョンに関する情報は提供されていません
 </ul>
 <h2 id="使用方法-1"><a class="header" href="#使用方法-1">使用方法</a></h2>
 <p><code>/image</code> コマンドを使用して画像生成を行うことができます.</p>
-<pre><code class="language-md">/image &lt;size&gt; &lt;count&gt; &lt;model&gt; [prompt]
+<pre><code class="language-md">/image [model] [prompt]
 </code></pre>
 <ul>
-<li><code>size</code>: 生成する画像のサイズを指定します.</li>
-<li><code>count</code>: 生成する画像の枚数を指定します.</li>
 <li><code>model</code>: 生成に使用するモデルを指定します. <code>dalle-2</code> または <code>dalle-3</code> を指定できます.</li>
 <li><code>prompt</code>: 生成する画像のテキストを指定します.</li>
 </ul>
 <h2 id="注意事項-1"><a class="header" href="#注意事項-1">注意事項</a></h2>
 <ul>
 <li>DALL-E の倫理コードに引っかかるような不適切なプロンプトは実行できません.</li>
-<li>画像は右クリックメニューから 画像を保存する ( Save Image ) を選ぶか, 生成結果 をクリックしてアクセス出来るサイトからダウンロードしてください.
-<ul>
-<li>時間が経過した画像については Cache が消失してダウンロードできない場合があります.</li>
-</ul>
-</li>
+<li>画像は右クリックメニューから 画像を保存する ( Save Image ) で保存できます.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="モデル"><a class="header" href="#モデル">モデル</a></h1>
 <p>ichiyoAI は現在 ChatGPT, Gemini, DALL-E に対応しています.</p>
@@ -399,9 +383,8 @@ v1.19.0 以前のバージョンに関する情報は提供されていません
 </ul>
 <h2 id="利用できるモデル一覧"><a class="header" href="#利用できるモデル一覧">利用できるモデル一覧</a></h2>
 <ul>
-<li>GPT-4</li>
+<li>GPT-4 Turbo</li>
 <li>DALL-E 3</li>
-<li>Gemini Ultra</li>
 </ul>
 <h2 id="モデルの比較"><a class="header" href="#モデルの比較">モデルの比較</a></h2>
 <p><a href="./model.html">モデル</a> を参照してください.</p>
