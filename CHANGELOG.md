@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.0.0...ichiyo_ai-v2.1.0) (2024-01-11)
+
+
+### Features
+
+* **lib:** Google AI 関係のエラー報告機能を強化 ([#189](https://github.com/approvers/ichiyoAI/issues/189)) ([791addf](https://github.com/approvers/ichiyoAI/commit/791addfcf1744944bfdda53a903139cad8cb4dfd))
+
 ## [2.0.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v1.21.0...ichiyo_ai-v2.0.0) (2024-01-08)
 
 
