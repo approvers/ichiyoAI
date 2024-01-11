@@ -74,8 +74,10 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
             })?;
 
         if res.status() != reqwest::StatusCode::OK {
-            tracing::error!(res.status = ?res.status(), "Unexpected status code");
+            tracing::warn!(res.status = ?res.status(), "Unexpected status code");
         }
+
+        let http_status = res.status().as_u16();
 
         let res = res.bytes().await.map_err(|cause| {
             tracing::error!(?cause, "Failed to read response");
@@ -92,17 +94,89 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
             "Failed to deserialize response"
         })?;
 
-        let Some([candidate]) = res.candidates else {
-            let reason = res.prompt_feedback.block_reason;
-            return Err(format!("Prompt blocked! reason: {reason:?}").into());
+        let (candidates, prompt_feedback) = match res {
+            Response::Success {
+                candidates,
+                prompt_feedback,
+            } => (candidates, prompt_feedback),
+            Response::Error { error } => {
+                tracing::error!(?error, "Receive error response");
+
+                let Error {
+                    code,
+                    message,
+                    status,
+                } = error;
+
+                if code != http_status as usize {
+                    tracing::warn!(error.code = %code, res.status = %http_status, "Unmatched error code");
+                }
+
+                let cr = code
+                    .try_into()
+                    .ok()
+                    .and_then(|code| reqwest::StatusCode::from_u16(code).ok())
+                    .and_then(|code| code.canonical_reason())
+                    .unwrap_or("Unknown");
+
+                let status = match status {
+                    Either::Lhs(kind) => format!("{:?}", kind),
+                    Either::Rhs(status) => format!("raw: `{status}`"),
+                };
+
+                let reason =
+                    format!("Respond with \"{cr}\" ({code}), status = {status}):\n```{message}```");
+
+                return Err(reason.into());
+            }
+        };
+
+        let Some([candidate]) = candidates else {
+            let reason = prompt_feedback
+                .block_reason
+                .map(|br| format!("{br:?}"))
+                .unwrap_or("<None>".to_owned());
+
+            let ratings = prompt_feedback
+                .safety_ratings
+                .iter()
+                .map(|sr| format!("- **{}** {:?}", sr.category, sr.probability))
+                .fold(String::new(), |c, n| c + &n + "\n");
+
+            let reason =
+                format!("Prompt blocked! reason = {reason}\n### Safety ratings:\n{ratings}");
+
+            return Err(reason.into());
         };
 
         if candidate.finish_reason != FinishReason::Stop {
-            return Err(format!("Unexpected finish reason: {}", candidate.finish_reason).into());
+            tracing::warn!(?candidate.finish_reason, "Unexpected finish reason");
         }
 
+        let Some(content) = &candidate.content else {
+            let Candidate {
+                finish_reason,
+                safety_ratings,
+                content: None,
+            } = candidate
+            else {
+                unreachable!()
+            };
+
+            let ratings = safety_ratings
+                .iter()
+                .map(|sr| format!("- **{}** {:?}", sr.category, sr.probability))
+                .fold(String::new(), |c, n| c + &n + "\n");
+
+            let reason = format!(
+                "Generation is stopped, reason = {finish_reason}.\n### Safety ratings:\n{ratings}"
+            );
+
+            return Err(reason.into());
+        };
+
         let content = {
-            let Content::Model { parts } = &candidate.content else {
+            let Content::Model { parts } = content else {
                 tracing::error!(?candidate.content, "Unexpected content");
                 return Err("Failed to deserialize response".into());
             };
@@ -123,7 +197,7 @@ impl<Model: self::Model + Send + Sync> super::Completion for Google<Model> {
         let contents = messages
             .iter()
             .map(Into::into)
-            .chain([candidate.content])
+            .chain([candidate.content.unwrap()])
             .collect();
 
         let metadata = super::CMetadata {
@@ -241,12 +315,59 @@ impl<'a> From<&'a super::Message> for Content<'a> {
 }
 
 #[derive(Debug, serde::Deserialize)]
+#[serde(untagged)]
+enum Response<'a> {
+    #[serde(rename_all = "camelCase")]
+    Success {
+        // FACT: supported only `1`
+        #[serde(borrow)]
+        candidates: Option<[Candidate<'a>; 1]>,
+        prompt_feedback: PromptFeedback,
+    },
+    #[serde(rename_all = "camelCase")]
+    #[rustfmt::skip]
+    Error {
+        error: Error<'a>,
+    },
+}
+
+#[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Response<'a> {
-    // FACT: supported only `1`
+struct Error<'a> {
+    code: usize,
+    message: alloc::borrow::Cow<'a, str>,
     #[serde(borrow)]
-    candidates: Option<[Candidate<'a>; 1]>,
-    prompt_feedback: PromptFeedback,
+    status: Either<ErrorKind, &'a str>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum ErrorKind {
+    InvalidArgument,
+    Internal,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(untagged)]
+enum Either<L, R> {
+    Lhs(L),
+    Rhs(R),
+}
+
+impl<L, R> Either<L, R> {
+    fn lhs(&self) -> Option<&L> {
+        match self {
+            Self::Lhs(l) => Some(l),
+            Self::Rhs(_) => None,
+        }
+    }
+
+    fn rhs(&self) -> Option<&R> {
+        match self {
+            Self::Lhs(_) => None,
+            Self::Rhs(r) => Some(r),
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -296,6 +417,46 @@ enum HarmCategory {
     DangerousContent,
 }
 
+impl core::fmt::Display for HarmCategory {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Self::Unspecified => {
+                f.write_str("Category is unspecified")
+            },
+            Self::Derogatory => {
+                f.write_str("Negative or harmful comments targeting identity and/or protected attribute")
+            },
+            Self::Toxicity => {
+                f.write_str("Content that is rude, disrepspectful, or profane")
+            },
+            Self::Violence => {
+                f.write_str("Describes scenarios depictng violence against an individual or group, or general descriptions of gore")
+            },
+            Self::Sexual => {
+                f.write_str("Contains references to sexual acts or other lewd content")
+            },
+            Self::Medical => {
+                f.write_str("Promotes unchecked medical advice")
+            },
+            Self::Dangerous => {
+                f.write_str("Dangerous content that promotes, facilitates, or encourages harmful acts")
+            },
+            Self::Harassment => {
+                f.write_str("Harasment content")
+            },
+            Self::HateSpeech => {
+                f.write_str("Hate speech and content")
+            },
+            Self::SexuallyExplicit => {
+                f.write_str("Sexually explicit content")
+            },
+            Self::DangerousContent => {
+                f.write_str("Dangerous content")
+            },
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 enum HarmProbability {
@@ -307,12 +468,35 @@ enum HarmProbability {
     High,
 }
 
+impl core::fmt::Display for HarmProbability {
+    #[rustfmt::skip]
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            Self::Unspecified => {
+                f.write_str("Probability is unspecified")
+            },
+            Self::Negligible => {
+                f.write_str("Content has a negligible chance of being unsafe")
+            },
+            Self::Low => {
+                f.write_str("Content has a low chance of being unsafe")
+            },
+            Self::Medium => {
+                f.write_str("Content has a medium chance of being unsafe")
+            },
+            Self::High => {
+                f.write_str("Content has a high chance of being unsafe")
+            },
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Candidate<'a> {
-    content: Content<'a>,
+    content: Option<Content<'a>>,
     finish_reason: FinishReason,
-    // safety_ratings: Vec<SafetyRating>,
+    safety_ratings: Vec<SafetyRating>,
     // citation_metadata: CitationMetadata,
     // // FACT: doesn't exist in a response
     // token_count: usize,
