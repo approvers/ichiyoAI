@@ -578,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "ichiyo_ai"
-version = "2.1.0"
+version = "2.1.1"
 dependencies = [
  "base64",
  "dotenvy",

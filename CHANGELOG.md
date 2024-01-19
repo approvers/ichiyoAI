@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.1.0...ichiyo_ai-v2.1.1) (2024-01-19)
+
+
+### Bug Fixes
+
+* **deps:** bump h2 from 0.3.21 to 0.3.24 ([#191](https://github.com/approvers/ichiyoAI/issues/191)) ([6714886](https://github.com/approvers/ichiyoAI/commit/671488608064a19693d5e0cf19ef0e80901aa4be))
+
 ## [2.1.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.0.0...ichiyo_ai-v2.1.0) (2024-01-11)
 
 
