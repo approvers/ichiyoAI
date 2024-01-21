@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.1.1...ichiyo_ai-v2.2.0) (2024-01-21)
+
+
+### Features
+
+* **bin:** DALL-E, ChatGPT のリクエストタイムアウトを緩和 ([#193](https://github.com/approvers/ichiyoAI/issues/193)) ([3486e64](https://github.com/approvers/ichiyoAI/commit/3486e649fc8eaa9bc084ecb1a8990816e612af3f))
+
 ## [2.1.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.1.0...ichiyo_ai-v2.1.1) (2024-01-19)
 
 
