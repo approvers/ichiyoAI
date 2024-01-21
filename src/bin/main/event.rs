@@ -14,7 +14,8 @@ use serenity::model::user::User;
 type Result<T> = core::result::Result<T, alloc::borrow::Cow<'static, str>>;
 
 // DaLL-E & ChatGPT で使用するタイムアウト時間の定数
-pub const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(60);
+// Note: v2.0.0 では 60 秒に設定されていたが, GPT-4 Turbo は 60 秒ではとてもレスポンスを返せてなさそうなので 180 秒に変更した
+pub const TIMEOUT_DURATION: std::time::Duration = std::time::Duration::from_secs(180);
 
 #[tracing::instrument(skip_all)]
 pub async fn is_sponsor(ctx: &Context, user: &User) -> Result<bool> {
