@@ -34,12 +34,12 @@ GPT-3.5 を改良し, 自然言語やコードを理解・生成できる言語�
 
 | モデル名 | ichiyoAI の対応バージョン | Context Window | トレーニングデータ | Input | Output |
 | --- | --- | --- | --- | --- | --- |
-| gpt-4-1106-preview | `v1.16.0` 〜 | 128,000 Token | Apr 2023 | $0.01 / 1k | $0.03 / 1k |
-| gpt-4-vision-preview | 未対応(`*`) | 128,000 Token | Apr 2023 | $0.01 / 1k | $0.03 / 1k |
+| gpt-4-0125-preview | `v2.3.0` 〜 | 128,000 Token | Apr 2023 | $0.01 / 1k | $0.03 / 1k |
+| gpt-4-1106-preview | `v1.16.0` 〜 `v2.2.0` | 128,000 Token | Apr 2023 | $0.01 / 1k | $0.03 / 1k |
+| gpt-4-vision-preview | 未対応 | 128,000 Token | Apr 2023 | $0.01 / 1k | $0.03 / 1k |
 | gpt-4 (Current: gpt-4-0613) | `v1.5.0` 〜 `v1.15.4` | 8.192 Token | Sep 2021 | $0.03 / 1k | $0.06 / 1k |
-| gpt-4-32k | 未対応(`*`) | 32,768 Token | Sep 2021 | $0.03 / 1k | $0.06 / 1k |
+| gpt-4-32k | 未対応 | 32,768 Token | Sep 2021 | $0.03 / 1k | $0.06 / 1k |
 
-`*`: 対応予定なしのモデルです.
 
 #### GPT-3.5
 
@@ -61,12 +61,11 @@ LaMDA, PaLM2 の後継として供し, Gemini Ultra, Gemini Pro, Gemini Nano か
 | モデル名 | ichiyoAI の対応バージョン | Input | Output | Price |
 | --- | --- | --- | --- | --- |
 | Gemini Pro | `v2.0.0` 〜 | Text | Text | Free |
-| Gemini Pro Vision | 未対応(`*`) | Text and Image | Text | Free |
+| Gemini Pro Vision | 未対応 | Text and Image | Text | Free |
 
 - Gemini Ultra, Gemini Nano は Preview access 状態のため, ichiyoAI は未対応です.
   - 利用できるようになり次第対応予定です.
 - PaLM や Embedding, Retrieval への対応は予定されていません.
-- `*`: 対応予定なしのモデルです.
 
 ## 深層学習モデル
 
