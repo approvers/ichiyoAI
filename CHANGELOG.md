@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.2.0...ichiyo_ai-v2.3.0) (2024-01-27)
+
+
+### Features
+
+* GPT-4 Turbo `gpt-4-0125-preview` のサポート ([#195](https://github.com/approvers/ichiyoAI/issues/195)) ([87dc83e](https://github.com/approvers/ichiyoAI/commit/87dc83e2f0e5b9a3428cd87e3666faeec52c9c31))
+
 ## [2.2.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.1.1...ichiyo_ai-v2.2.0) (2024-01-21)
 
 
