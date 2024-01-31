@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.3.0...ichiyo_ai-v2.3.1) (2024-01-31)
+
+
+### Bug Fixes
+
+* fix some typos and grammar errors ([#199](https://github.com/approvers/ichiyoAI/issues/199)) ([72b18c5](https://github.com/approvers/ichiyoAI/commit/72b18c550740b31ed7f66f156aeda7bea929967a))
+
 ## [2.3.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.2.0...ichiyo_ai-v2.3.0) (2024-01-27)
 
 
