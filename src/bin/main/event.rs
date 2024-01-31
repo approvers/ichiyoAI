@@ -121,8 +121,8 @@ async fn image(ctx: &Context, ci: &CommandInteraction) -> Result<()> {
     let ret = match result {
         Ok(result) => result?,
         Err(e) => {
-            tracing::error!(?e, "Timeouted to generate image");
-            return Err("Timeouted to generate image".into());
+            tracing::error!(?e, "Timed out to generate image");
+            return Err("Timed out to generate image".into());
         }
     };
 

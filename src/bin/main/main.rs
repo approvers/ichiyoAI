@@ -15,7 +15,7 @@ pub struct IchiyoAiEnv {
 pub fn envs() -> &'static IchiyoAiEnv {
     static CACHE: std::sync::OnceLock<IchiyoAiEnv> = std::sync::OnceLock::new();
 
-    CACHE.get_or_init(|| envy::from_env().expect("Failed to load enviroment variables"))
+    CACHE.get_or_init(|| envy::from_env().expect("Failed to load environment variables"))
 }
 
 #[tokio::main]
