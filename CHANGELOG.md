@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.4.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.3.1...ichiyo_ai-v2.4.0) (2024-02-11)
+
+
+### Features
+
+* update model `gpt-3.5-turbo-0125` ([#204](https://github.com/approvers/ichiyoAI/issues/204)) ([176d95d](https://github.com/approvers/ichiyoAI/commit/176d95d979a2588af503a9db0bbdbde1076349c5))
+
+
+### Bug Fixes
+
+* **docker:** release-please config `package-name` ([#207](https://github.com/approvers/ichiyoAI/issues/207)) ([3bf04e9](https://github.com/approvers/ichiyoAI/commit/3bf04e98506055c68799692c3d1bc481487f985f))
+
 ## [2.3.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.3.0...ichiyo_ai-v2.3.1) (2024-01-31)
 
 
