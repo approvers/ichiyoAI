@@ -1,7 +1,9 @@
 {
   "last-release-sha": "37b4260da6fa7034ca146d8e4a5cd00c283c8540",
-  "release-type": "rust",
   "packages": {
-    ".": {}
+    ".": {
+      "release-type": "rust",
+      "package-name": "ichiyoAI"
+    }
   }
 }
