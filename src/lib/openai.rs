@@ -28,7 +28,7 @@ macro_rules! define_model {
 // Note: https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
 define_model!(pub GPT4Turbo:  "gpt-4-0125-preview", rate = req 0.01  , res 0.03  );
 // Note: https://platform.openai.com/docs/models/gpt-3-5
-define_model!(pub GPT35Turbo: "gpt-3.5-turbo-1106", rate = req 0.0010, res 0.0020);
+define_model!(pub GPT35Turbo: "gpt-3.5-turbo-0125", rate = req 0.0010, res 0.0020);
 
 impl<Model> OpenAi<Model> {
     pub fn new(token: impl AsRef<str>) -> Self {
