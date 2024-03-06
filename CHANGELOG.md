@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.4.0...ichiyo_ai-v2.4.1) (2024-03-06)
+
+
+### Bug Fixes
+
+* **deps:** bump mio from 0.8.9 to 0.8.11 ([#215](https://github.com/approvers/ichiyoAI/issues/215)) ([42d9987](https://github.com/approvers/ichiyoAI/commit/42d9987c0014e1dac56a42f5fd8e88eab8f314b8))
+
 ## [2.4.0](https://github.com/approvers/ichiyoAI/compare/ichiyo_ai-v2.3.1...ichiyo_ai-v2.4.0) (2024-02-11)
 
 
