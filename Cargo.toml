@@ -24,7 +24,7 @@ sentry = "0.32.3"
 tokio-stream = "0.1"
 
 [dependencies.serenity]
-version = "0.12"
+version = "0.12.1"
 features = ["client", "gateway", "model", "cache", "rustls_backend", "framework", "standard_framework"]
 default-features = false
 
