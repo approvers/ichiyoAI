@@ -1,11 +1,11 @@
-FROM rust:1.79.0-bullseye as Builder
+FROM rust:1.79.0-bookworm as Builder
 
 WORKDIR /root/app
 COPY --chown=root:root . .
 
 RUN cargo build --release --bin ichiyo_ai
 
-FROM debian:bullseye-slim as Runner
+FROM debian:bookworm-slim as Runner
 
 COPY --from=Builder --chown=root:root /root/app/target/release/ichiyo_ai /usr/local/bin/ichiyo_ai
 
