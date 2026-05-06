@@ -17,11 +17,20 @@ dotenvy = "0.15.7"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 envy = "0.4.2"
-reqwest = "0.12.4"
 serde_json = "1.0.116"
 base64 = "0.22.1"
-sentry = "0.34.0"
 tokio-stream = "0.1.15"
+
+[dependencies.reqwest]
+version = "0.12.4"
+features = ["rustls-tls", "charset", "http2", "macos-system-configuration"]
+default-features = false
+
+[dependencies.sentry]
+version = "0.34.0"
+# do not use `transport` feature. it pulls `native-tls`
+features = ["backtrace", "contexts", "debug-images", "panic", "reqwest", "rustls"]
+default-features = false
 
 [dependencies.serenity]
 version = "0.12.1"
