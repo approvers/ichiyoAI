@@ -27,7 +27,7 @@ features = ["rustls-tls", "charset", "http2", "macos-system-configuration"]
 default-features = false
 
 [dependencies.sentry]
-version = "0.34.0"
+version = "0.48.0"
 # do not use `transport` feature. it pulls `native-tls`
 features = ["backtrace", "contexts", "debug-images", "panic", "reqwest", "rustls"]
 default-features = false
