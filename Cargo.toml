@@ -22,7 +22,7 @@ base64 = "0.22.1"
 tokio-stream = "0.1.15"
 
 [dependencies.reqwest]
-version = "0.12.4"
+version = "0.13.0"
 features = ["rustls-tls", "charset", "http2", "macos-system-configuration"]
 default-features = false
 
